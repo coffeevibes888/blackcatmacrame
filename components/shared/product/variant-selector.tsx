@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Decimal } from '@prisma/client/runtime/library';
 import AddToCart from './add-to-cart';
 import { Cart, CartItem } from '@/types';
@@ -32,8 +32,13 @@ export default function VariantSelector({
   product: Product;
   cart?: Cart;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const colors = useMemo(() => {
     let filtered = variants;
@@ -98,6 +103,10 @@ export default function VariantSelector({
 
   const shouldShowButton = hasRequiredSelections();
   const shouldShowMessage = !hasRequiredSelections();
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className='space-y-4'>
