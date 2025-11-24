@@ -101,12 +101,29 @@ export async function syncProductsFromPrintful() {
         detailed?.sync_product?.retail_price ?? p.retail_price ?? firstVariantPrice ?? 0,
       );
 
+      // Collect all mockup images from all variants to use for the main product
+      const allProductImages: string[] = [];
+      if (imageUrl) allProductImages.push(imageUrl);
+      
+      for (const v of syncVariants) {
+        if (v.files && Array.isArray(v.files)) {
+          for (const file of v.files) {
+            if (file.preview_url && !allProductImages.includes(file.preview_url)) {
+              allProductImages.push(file.preview_url);
+            }
+          }
+        }
+        if (v.product?.thumbnail_url && !allProductImages.includes(v.product.thumbnail_url)) {
+          allProductImages.push(v.product.thumbnail_url);
+        }
+      }
+
       const product = await prisma.product.upsert({
         where: { slug }, // slug is unique, use it as the upsert key
         update: {
           name,
           category,
-          images: imageUrl ? [imageUrl] : [],
+          images: allProductImages.length > 0 ? allProductImages : [],
           price: retailPrice,
           brand: 'Printful',
           description: detailed?.sync_product?.description ?? '',
@@ -115,7 +132,7 @@ export async function syncProductsFromPrintful() {
           name,
           slug,
           category,
-          images: imageUrl ? [imageUrl] : [],
+          images: allProductImages.length > 0 ? allProductImages : [],
           brand: 'Printful',
           description: detailed?.sync_product?.description ?? '',
           stock: 9999,
@@ -199,15 +216,28 @@ export async function syncProductsFromPrintful() {
           }
         }
 
-        // Prefer per-variant garment thumbnail; fall back to design preview if needed
-        const variantImage: string | undefined =
-          v.product?.thumbnail_url || (v.files && v.files[0]?.preview_url);
+        // Collect all mockup images for this variant from the files array
+        const variantImages: string[] = [];
+        
+        // First add the product thumbnail if it exists
+        if (v.product?.thumbnail_url) {
+          variantImages.push(v.product.thumbnail_url);
+        }
+        
+        // Then add all preview URLs from the files array (these are the mockups)
+        if (v.files && Array.isArray(v.files)) {
+          for (const file of v.files) {
+            if (file.preview_url && !variantImages.includes(file.preview_url)) {
+              variantImages.push(file.preview_url);
+            }
+          }
+        }
 
         await prisma.productVariant.upsert({
           where: { sku: v.sku ?? undefined },
           update: {
             price: variantRetailPrice,
-            images: variantImage ? [variantImage] : [],
+            images: variantImages.length > 0 ? variantImages : [],
             colorId,
             sizeId,
           },
@@ -216,7 +246,7 @@ export async function syncProductsFromPrintful() {
             sku: v.sku,
             price: variantRetailPrice,
             stock: 9999,
-            images: variantImage ? [variantImage] : [],
+            images: variantImages.length > 0 ? variantImages : [],
             colorId,
             sizeId,
           },

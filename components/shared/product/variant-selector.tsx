@@ -28,12 +28,12 @@ export default function VariantSelector({
   variants,
   product,
   cart,
-  onImageChange,
+  onColorSelected,
 }: {
   variants: Variant[];
   product: Product;
   cart?: Cart;
-  onImageChange?: (url: string | undefined) => void;
+  onColorSelected?: (colorSlug: string | undefined, colorName: string | undefined) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
@@ -78,12 +78,17 @@ export default function VariantSelector({
       filtered = filtered.filter((v) => v.size?.slug === selectedSize);
     }
     
+    console.log('[VariantSelector] Selected variant:', filtered[0]);
     return filtered[0];
   }, [variants, selectedColor, selectedSize]);
 
+  // Use the first image from the selected variant to show the color variation
   const variantImage = selectedVariant?.images?.[0];
   const productImage = product.images?.[0];
   const image = variantImage || productImage;
+  
+  console.log('[VariantSelector] Image to display:', image);
+  console.log('[VariantSelector] Variant images:', selectedVariant?.images);
 
   const item: CartItem = {
     productId: product.id,
@@ -98,6 +103,7 @@ export default function VariantSelector({
   } as unknown as CartItem;
 
   const hasRequiredSelections = () => {
+    if (!selectedVariant) return false;
     if (colors.length === 0 && sizes.length === 0) return true;
     if (colors.length > 0 && !selectedColor) return false;
     if (sizes.length > 0 && !selectedSize) return false;
@@ -108,10 +114,15 @@ export default function VariantSelector({
   const shouldShowMessage = !hasRequiredSelections();
 
   useEffect(() => {
-    if (onImageChange) {
-      onImageChange(image);
+    if (onColorSelected && selectedColor) {
+      const colorName = colors.find(c => c.slug === selectedColor)?.name;
+      console.log('[VariantSelector] Color changed to:', selectedColor, colorName);
+      onColorSelected(selectedColor, colorName);
+    } else if (onColorSelected && !selectedColor) {
+      // Color was deselected
+      onColorSelected(undefined, undefined);
     }
-  }, [image, onImageChange]);
+  }, [selectedColor, onColorSelected, colors]);
 
   if (!mounted) {
     return null;
@@ -125,7 +136,11 @@ export default function VariantSelector({
           <select
             className='w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             value={selectedColor || ''}
-            onChange={(e) => setSelectedColor(e.target.value || undefined)}
+            onChange={(e) => {
+              const newColor = e.target.value || undefined;
+              console.log('[VariantSelector] Color dropdown changed:', newColor);
+              setSelectedColor(newColor);
+            }}
           >
             <option value=''>Select color</option>
             {colors.map((c) => (
@@ -142,7 +157,11 @@ export default function VariantSelector({
           <select
             className='w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             value={selectedSize || ''}
-            onChange={(e) => setSelectedSize(e.target.value || undefined)}
+            onChange={(e) => {
+              const newSize = e.target.value || undefined;
+              console.log('[VariantSelector] Size dropdown changed:', newSize);
+              setSelectedSize(newSize);
+            }}
           >
             <option value=''>Select size</option>
             {sizes.map((s) => (

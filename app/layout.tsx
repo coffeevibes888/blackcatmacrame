@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className='bg-linear-to-r from-slate-700 via-violet-600 to-stone-900 flex flex-col min-h-screen overflow-x-hidden'>
+      <body className='bg-gradient-to-br from-slate-950 via-violet-800/60 to-slate-900 text-slate-50 flex flex-col min-h-screen overflow-x-hidden'>
         <ThemeProvider
           attribute='class'
           defaultTheme='light'

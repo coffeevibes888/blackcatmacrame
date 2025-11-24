@@ -66,9 +66,9 @@ function Product3DRotator() {
   const [index, setIndex] = useState(0);
 
   const products = [
-    { src: '/images/light1.png', alt: 'Product 1' },
-    { src: '/images/light2.png', alt: 'Product 2' },
-    { src: '/images/twolightblue.png', alt: 'Product 3' },
+    { src: '/images/rocken.png', alt: 'Product 1' },
+    { src: '/images/light1.png', alt: 'Product 2' },
+    { src: '/images/rocken1.png', alt: 'Product 3' },
   ];
 
   useEffect(() => {

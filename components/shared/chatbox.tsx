@@ -14,6 +14,7 @@ export function ChatBox({ onClose }: ChatBoxProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -45,12 +46,16 @@ export function ChatBox({ onClose }: ChatBoxProps) {
       const response = await fetch('/api/chat/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, threadId }),
       });
 
       if (!response.ok) throw new Error('Failed to get AI response');
 
       const data = await response.json();
+
+      if (data.threadId && !threadId) {
+        setThreadId(data.threadId);
+      }
       const aiMessage: ChatMessage = {
         id: Date.now().toString(),
         content: data.response,

@@ -1,9 +1,11 @@
-export const metadata = {
-  title: 'Contact Page'
-}
+import Header from '@/components/shared/header';
+import ContactClient from './contact-client';
 
-const Contact = () => {
-    return ( <>This is the Contact Page</> );
+export default function Contact() {
+  return (
+    <>
+      <Header />
+      <ContactClient />
+    </>
+  );
 }
- 
-export default Contact;

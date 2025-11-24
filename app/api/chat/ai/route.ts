@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/db/prisma';
 
 interface ChatRequest {
   message: string;
+  threadId?: string;
 }
 
 const SIMULATED_RESPONSES: Record<string, string> = {
@@ -88,7 +90,7 @@ async function callOpenAI(message: string): Promise<string | null> {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ChatRequest;
-    const { message } = body;
+    const { message, threadId } = body;
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -103,9 +105,60 @@ export async function POST(request: NextRequest) {
       aiResponse = getSimulatedResponse(message);
     }
 
+    // Create or update support thread + messages
+    let thread = null;
+
+    if (threadId) {
+      thread = await prisma.thread.findUnique({ where: { id: threadId } });
+    }
+
+    if (!thread) {
+      thread = await prisma.thread.create({
+        data: {
+          type: 'support',
+          subject: 'Support chat',
+        },
+      });
+    }
+
+    await prisma.message.createMany({
+      data: [
+        {
+          threadId: thread.id,
+          senderUserId: null,
+          senderName: 'Visitor',
+          senderEmail: null,
+          content: message,
+          role: 'user',
+        },
+        {
+          threadId: thread.id,
+          senderUserId: null,
+          senderName: 'AI Assistant',
+          senderEmail: null,
+          content: aiResponse,
+          role: 'ai',
+        },
+      ],
+    });
+
+    const agentResponse = 'A live agent is now available. Would you like to chat with them?';
+
+    await prisma.message.create({
+      data: {
+        threadId: thread.id,
+        senderUserId: null,
+        senderName: 'Live Agent',
+        senderEmail: null,
+        content: agentResponse,
+        role: 'admin',
+      },
+    });
+
     return NextResponse.json({
       response: aiResponse,
-      agentResponse: 'A live agent is now available. Would you like to chat with them?',
+      agentResponse,
+      threadId: thread.id,
     });
   } catch (error) {
     // eslint-disable-next-line no-console

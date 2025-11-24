@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import ProductPrice from '@/components/shared/product/product-price';
@@ -39,20 +39,52 @@ export default function ProductDetailClient({
   product: Product;
   cart?: Cart;
 }) {
-  const baseImages = product.images || [];
-  const variantImages = (product.variants || []).flatMap((v) => v.images || []);
-  const allImages = Array.from(new Set([...baseImages, ...variantImages]));
+  const baseImages = useMemo(() => product.images || [], [product.images]);
+  
+  const [activeImage, setActiveImage] = useState<string | undefined>(baseImages[0]);
+  const [activeColorName, setActiveColorName] = useState<string | undefined>();
 
-  const [activeImage, setActiveImage] = useState<string | undefined>(
-    allImages[0],
-  );
+  // Use all base images for thumbnails; only the main image changes with color selection
+  const allImages = Array.from(new Set(baseImages));
+
+  // Function to handle color selection and update main image
+  const handleColorSelected = useCallback((colorSlug: string | undefined, colorName: string | undefined) => {
+    console.log('[ProductDetailClient] Color selected:', colorSlug, colorName);
+    
+    setActiveColorName(colorName);
+    
+    // Find the variant with this color and get its first image
+    if (colorSlug) {
+      const variantWithColor = (product.variants || []).find((v) => v.color?.slug === colorSlug);
+      const firstColorImage = variantWithColor?.images?.[0];
+      
+      console.log('[ProductDetailClient] Switching to color variant image:', firstColorImage);
+      
+      if (firstColorImage) {
+        setActiveImage(firstColorImage);
+      }
+    } else {
+      // If no color selected, reset to base image
+      setActiveImage(baseImages[0]);
+    }
+  }, [product.variants, baseImages]);
+
+  const handleImageChange = useCallback((url: string | undefined) => {
+    console.log('[ProductDetailClient] Thumbnail clicked, changing image to:', url);
+    setActiveImage(url);
+  }, []);
 
   return (
     <section>
       <div className='grid grid-cols-1 md:grid-cols-5'>
         {/* Images Column */}
         <div className='col-span-2'>
-          <ProductImages images={allImages} activeImage={activeImage} />
+          <ProductImages 
+            images={allImages} 
+            activeImage={activeImage}
+            onImageClick={handleImageChange}
+            colorName={activeColorName}
+          />
         </div>
 
         {/* Details Column */}
@@ -102,7 +134,7 @@ export default function ProductDetailClient({
                       variants={product.variants || []}
                       product={product}
                       cart={cart}
-                      onImageChange={(url) => setActiveImage(url)}
+                      onColorSelected={handleColorSelected}
                     />
                   </div>
                 </div>

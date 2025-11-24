@@ -44,7 +44,18 @@ const OrdersClient = ({ orders, page, totalPages }: OrdersClientProps) => {
   return (
     <>
       <div className='space-y-2'>
-        <h2 className='h2-bold'>Orders</h2>
+        <div className='flex items-center justify-between gap-2'>
+          <h2 className='h2-bold'>Orders</h2>
+          <Link href='/user/profile/inbox'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='text-xs font-medium'
+            >
+              Inbox
+            </Button>
+          </Link>
+        </div>
         <div className='overflow-x-auto'>
           <Table>
             <TableHeader>

@@ -16,7 +16,6 @@ const Homepage = async () => {
       <ProductList data={latestProducts} title='Newest Arrivals' limit={4} />
       <ViewAllProductsButton />
       {/* <DealCountdown /> */}
-
         {featuredProducts.length > 0 && (
         <ProductCarousel data={featuredProducts}
          />

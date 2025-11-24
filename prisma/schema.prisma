@@ -53,6 +53,7 @@ model User {
   Review              Review[]
   savedPaymentMethods SavedPaymentMethod[]
   paymentMethodTokens PaymentMethodVerificationToken[]
+  threadParticipants  ThreadParticipant[]
 }
 
 model Account {
@@ -328,4 +329,42 @@ model TaxSettings {
   updatedAt       DateTime @updatedAt
 
   @@unique([id])
+}
+
+model Thread {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type            String   @default("contact") // contact, support, dm
+  subject         String?
+  createdByUserId String?  @db.Uuid
+  status          String   @default("open") // open, closed, pending
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @updatedAt
+
+  messages     Message[]
+  participants ThreadParticipant[]
+}
+
+model Message {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId      String   @db.Uuid
+  senderUserId  String?  @db.Uuid
+  senderName    String?
+  senderEmail   String?
+  content       String
+  role          String   @default("user") // user, admin, system, ai
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+model ThreadParticipant {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId   String   @db.Uuid
+  userId     String   @db.Uuid
+  lastReadAt DateTime?
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
 }
