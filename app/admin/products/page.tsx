@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getAllProducts, deleteProduct, syncProductsFromPrintful } from '@/lib/actions/product.actions';
+import { getAllProducts, deleteProduct } from '@/lib/actions/product.actions';
 import ProductPromoDialog from '@/components/admin/product-promo-dialog';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -46,11 +46,6 @@ const AdminProductsPage = async (props: {
     category,
   });
 
-  async function syncPrintfulAction() {
-    'use server';
-    await syncProductsFromPrintful();
-  }
-
   return (
     <div className='space-y-2'>
       <div className='flex-between'>
@@ -68,9 +63,6 @@ const AdminProductsPage = async (props: {
           )}
         </div>
         <div className='flex gap-2'>
-          <form action={syncPrintfulAction}>
-            <Button type='submit' variant='outline'>Sync from Printful</Button>
-          </form>
           <Button asChild variant='default'>
             <Link href='/admin/products/create'>Create Product</Link>
           </Button>

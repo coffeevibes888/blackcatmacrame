@@ -3,7 +3,7 @@ import { formatNumberWithDecimal } from './utils';
 import { PAYMENT_METHODS } from './constants';
 
 const currency = z
-  .number()
+  .coerce.number()
   .refine(
     (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(value)),
     'Price must have exactly two decimal places'

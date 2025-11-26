@@ -24,13 +24,13 @@ const ProductImages = ({
   }, [activeImage, images]);
 
   const handleThumbnailClick = (image: string, index: number) => {
-    console.log('[ProductImages] Thumbnail clicked:', image, 'index:', index);
     setCurrent(index);
     if (onImageClick) {
-      console.log('[ProductImages] Calling onImageClick callback');
       onImageClick(image);
     }
   };
+
+  if (!images.length) return null;
 
   return (
     <div className='space-y-4'>

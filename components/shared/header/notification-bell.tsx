@@ -18,6 +18,8 @@ interface NotificationData {
   newOrders: number;
   openMessages: number;
   unreadMessages: number;
+  unreadEmailThreads: number;
+  pendingFriendRequests: number;
 }
 
 export default function NotificationBell({ isAdmin }: { isAdmin: boolean }) {
@@ -25,6 +27,8 @@ export default function NotificationBell({ isAdmin }: { isAdmin: boolean }) {
     newOrders: 0,
     openMessages: 0,
     unreadMessages: 0,
+    unreadEmailThreads: 0,
+    pendingFriendRequests: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,7 +54,7 @@ export default function NotificationBell({ isAdmin }: { isAdmin: boolean }) {
 
   const totalCount = isAdmin
     ? notifications.newOrders + notifications.openMessages
-    : notifications.unreadMessages;
+    : notifications.unreadMessages + notifications.pendingFriendRequests;
 
   return (
     <DropdownMenu>
@@ -104,6 +108,16 @@ export default function NotificationBell({ isAdmin }: { isAdmin: boolean }) {
                   <div className='flex items-center justify-between w-full'>
                     <span>Unread messages</span>
                     <Badge variant='secondary'>{notifications.unreadMessages}</Badge>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {!isAdmin && notifications.pendingFriendRequests > 0 && (
+              <DropdownMenuItem asChild>
+                <Link href='/user/profile/inbox' className='cursor-pointer'>
+                  <div className='flex items-center justify-between w-full'>
+                    <span>Friend requests</span>
+                    <Badge variant='secondary'>{notifications.pendingFriendRequests}</Badge>
                   </div>
                 </Link>
               </DropdownMenuItem>

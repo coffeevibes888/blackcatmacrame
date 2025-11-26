@@ -67,9 +67,10 @@ export default async function AdminMessagesPage() {
                   const created = new Date(thread.createdAt).toLocaleString();
 
                   return (
-                    <div
+                    <Link
                       key={thread.id}
-                      className="rounded-xl border border-white/10 bg-slate-900/60 px-3.5 py-3 text-xs text-slate-200/90 flex flex-col gap-1"
+                      href={`/admin/messages/${thread.id}`}
+                      className="block rounded-xl border border-white/10 bg-slate-900/60 px-3.5 py-3 text-xs text-slate-200/90 flex flex-col gap-1 hover:border-violet-400/60 hover:bg-slate-900/90 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/90">
@@ -85,7 +86,7 @@ export default async function AdminMessagesPage() {
                       <p className="text-[11px] text-slate-300/90 line-clamp-2">
                         {preview || 'No message content'}
                       </p>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

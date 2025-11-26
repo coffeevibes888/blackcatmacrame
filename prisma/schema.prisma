@@ -54,6 +54,8 @@ model User {
   savedPaymentMethods SavedPaymentMethod[]
   paymentMethodTokens PaymentMethodVerificationToken[]
   threadParticipants  ThreadParticipant[]
+  friends             Friend[]                        @relation("UserFriends")
+  friendOf            Friend[]                        @relation("UserFriendOf")
 }
 
 model Account {
@@ -335,6 +337,8 @@ model Thread {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type            String   @default("contact") // contact, support, dm
   subject         String?
+  fromEmail       String?
+  toEmail         String?
   createdByUserId String?  @db.Uuid
   status          String   @default("open") // open, closed, pending
   createdAt       DateTime @default(now()) @db.Timestamp(6)
@@ -367,4 +371,18 @@ model ThreadParticipant {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([threadId, userId])
+}
+
+model Friend {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  friendId  String   @db.Uuid
+  status    String   @default("pending") // pending, accepted, declined, blocked
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("UserFriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
 }

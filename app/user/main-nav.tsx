@@ -13,6 +13,14 @@ const links = [
     title: 'Orders',
     href: '/user/orders',
   },
+  {
+    title: 'Inbox',
+    href: '/user/profile/inbox',
+  },
+  {
+    title: 'Support',
+    href: '/contact',
+  },
 ];
 
 const MainNav = ({

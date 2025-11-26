@@ -45,7 +45,7 @@ const PlaceOrderForm = ({ preferredPaymentMethod }: { preferredPaymentMethod: st
   const [isPending, startTransition] = useTransition();
   const [isApplyingPromo, startApplyPromo] = useTransition();
   const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>([]);
-  const [selectedMethodId, setSelectedMethodId] = useState<string>('');
+  const [selectedMethodId, setSelectedMethodId] = useState<string | undefined>(undefined);
   const [isLoadingMethods, setIsLoadingMethods] = useState(true);
 
   const form = useForm<z.infer<typeof paymentMethodSchema>>({
@@ -97,6 +97,13 @@ const PlaceOrderForm = ({ preferredPaymentMethod }: { preferredPaymentMethod: st
 
       const res = await createOrder();
 
+      if (!res.success) {
+        toast({
+          variant: 'destructive',
+          description: res.message || 'Failed to place order',
+        });
+      }
+
       if (res.redirectTo) {
         router.push(res.redirectTo);
       }
@@ -105,7 +112,7 @@ const PlaceOrderForm = ({ preferredPaymentMethod }: { preferredPaymentMethod: st
 
   const PlaceOrderButton = () => {
     return (
-      <Button disabled={isPending} className='w-full'>
+      <Button type='submit' disabled={isPending} className='w-full'>
         {isPending ? (
           <Loader className='w-4 h-4 animate-spin' />
         ) : (
@@ -122,12 +129,14 @@ const PlaceOrderForm = ({ preferredPaymentMethod }: { preferredPaymentMethod: st
         {!isLoadingMethods && savedMethods.length > 0 && (
           <div className='border rounded-lg p-4 bg-muted'>
             <Label className='mb-3 block'>Use Saved Payment Method</Label>
-            <Select value={selectedMethodId} onValueChange={setSelectedMethodId}>
+            <Select
+              value={selectedMethodId}
+              onValueChange={(val) => setSelectedMethodId(val)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder='Select a saved payment method' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=''>Select a saved payment method</SelectItem>
                 {savedMethods.map((method) => (
                   <SelectItem key={method.id} value={method.id}>
                     {method.cardholderName && `${method.cardholderName} - `}

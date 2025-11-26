@@ -7,16 +7,8 @@ import { Product } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { ControllerRenderProps, SubmitHandler, useForm } from 'react-hook-form';
-import { z } from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../ui/form';
 import slugify from 'slugify';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
@@ -25,6 +17,7 @@ import { UploadButton } from '@/lib/uploadthing';
 import { Card, CardContent } from '../ui/card';
 import Image from 'next/image';
 import { Checkbox } from '../ui/checkbox';
+import { z } from 'zod';
 
 const ProductForm = ({
   type,
@@ -50,121 +43,82 @@ const ProductForm = ({
   const onSubmit: SubmitHandler<z.infer<typeof insertProductSchema>> = async (
     values
   ) => {
-    // On Create
+    let res;
     if (type === 'Create') {
-      const res = await createProduct(values);
-
-      if (!res.success) {
-        toast({
-          variant: 'destructive',
-          description: res.message,
-        });
-      } else {
-        toast({
-          description: res.message,
-        });
-        router.push('/admin/products');
-      }
+      res = await createProduct(values);
+    } else if (productId) {
+      res = await updateProduct({ ...values, id: productId });
     }
 
-    // On Update
-    if (type === 'Update') {
-      if (!productId) {
-        router.push('/admin/products');
-        return;
-      }
-
-      const res = await updateProduct({ ...values, id: productId });
-
-      if (!res.success) {
-        toast({
-          variant: 'destructive',
-          description: res.message,
-        });
-      } else {
-        toast({
-          description: res.message,
-        });
-        router.push('/admin/products');
-      }
+    if (!res?.success) {
+      toast({
+        variant: 'destructive',
+        description: res?.message || 'Something went wrong',
+      });
+    } else {
+      toast({ description: res.message });
+      router.push('/admin/products');
     }
   };
 
-  const images = form.watch('images');
+  const images = (form.watch('images') as string[]) || [];
   const isFeatured = form.watch('isFeatured');
   const banner = form.watch('banner');
   const [colors, setColors] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [sizes, setSizes] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   useEffect(() => {
-    // fetch available colors and sizes for admin form
     (async () => {
       try {
-        const [cRes, sRes] = await Promise.all([fetch('/api/colors'), fetch('/api/sizes')]);
+        const [cRes, sRes] = await Promise.all([
+          fetch('/api/colors'),
+          fetch('/api/sizes'),
+        ]);
         if (cRes.ok) setColors(await cRes.json());
         if (sRes.ok) setSizes(await sRes.json());
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Error fetching colors/sizes for product form:', err);
+        console.error('Error fetching colors/sizes:', err);
       }
     })();
   }, []);
 
   return (
     <Form {...form}>
-      <form
-        method='POST'
-        onSubmit={form.handleSubmit(onSubmit)}
-        className='space-y-8'
-      >
-        <div className='flex flex-col md:flex-row gap-5'>
-          {/* Name */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* -------------------- Name & Slug -------------------- */}
+        <div className="flex flex-col md:flex-row gap-5">
           <FormField
             control={form.control}
-            name='name'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'name'
-              >;
-            }) => (
-              <FormItem className='w-full'>
+            name="name"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'name'> }) => (
+              <FormItem className="w-full">
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter product name' {...field} />
+                  <Input placeholder="Enter product name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/* Slug */}
+
           <FormField
             control={form.control}
-            name='slug'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'slug'
-              >;
-            }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Name</FormLabel>
+            name="slug"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'slug'> }) => (
+              <FormItem className="w-full">
+                <FormLabel>Slug</FormLabel>
                 <FormControl>
-                  <div className='relative'>
-                    <Input placeholder='Enter slug' {...field} />
+                  <div className="relative">
+                    <Input placeholder="Enter slug" {...field} />
                     <Button
-                      type='button'
-                      className='bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 mt-2'
-                      onClick={() => {
+                      type="button"
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 mt-2"
+                      onClick={() =>
                         form.setValue(
                           'slug',
                           slugify(form.getValues('name'), { lower: true })
-                        );
-                      }}
+                        )
+                      }
                     >
                       Generate
                     </Button>
@@ -175,200 +129,187 @@ const ProductForm = ({
             )}
           />
         </div>
-        <div className='flex flex-col md:flex-row gap-5'>
-          {/* Category */}
+
+        {/* -------------------- Category & Brand -------------------- */}
+        <div className="flex flex-col md:flex-row gap-5">
           <FormField
             control={form.control}
-            name='category'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'category'
-              >;
-            }) => (
-              <FormItem className='w-full'>
+            name="category"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'category'> }) => (
+              <FormItem className="w-full">
                 <FormLabel>Category</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter category' {...field} />
+                  <Input placeholder="Enter category" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/* Brand */}
+
           <FormField
             control={form.control}
-            name='brand'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'brand'
-              >;
-            }) => (
-              <FormItem className='w-full'>
+            name="brand"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'brand'> }) => (
+              <FormItem className="w-full">
                 <FormLabel>Brand</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter brand' {...field} />
+                  <Input placeholder="Enter brand" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className='flex flex-col md:flex-row gap-5'>
-          {/* Price */}
+
+        {/* -------------------- Price & Stock -------------------- */}
+        <div className="flex flex-col md:flex-row gap-5">
           <FormField
             control={form.control}
-            name='price'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'price'
-              >;
-            }) => (
-              <FormItem className='w-full'>
+            name="price"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'price'> }) => (
+              <FormItem className="w-full">
                 <FormLabel>Price</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter product price' {...field} />
+                  <Input placeholder="Enter product price" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/* Stock */}
+
           <FormField
             control={form.control}
-            name='stock'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'stock'
-              >;
-            }) => (
-              <FormItem className='w-full'>
+            name="stock"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'stock'> }) => (
+              <FormItem className="w-full">
                 <FormLabel>Stock</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter stock' {...field} />
+                  <Input placeholder="Enter stock" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className='upload-field flex flex-col md:flex-row gap-5'>
-          {/* Images */}
-          <FormField
-            control={form.control}
-            name='images'
-            render={() => (
-              <FormItem className='w-full'>
-                <FormLabel>Images</FormLabel>
-                <Card>
-                  <CardContent className='space-y-2 mt-2 min-h-48'>
-                    <div className='flex-start space-x-2'>
-                      {images.map((image: string) => (
-                        <Image
-                          key={image}
-                          src={image}
-                          alt='product image'
-                          className='w-20 h-20 object-cover object-center rounded-sm'
-                          width={100}
-                          height={100}
-                        />
-                      ))}
-                      <FormControl>
-                        <UploadButton
-                          endpoint='imageUploader'
-                          onClientUploadComplete={(res: { url: string }[]) => {
-                            form.setValue('images', [...images, res[0].url]);
-                          }}
-                          onUploadError={(error: Error) => {
-                            toast({
-                              variant: 'destructive',
-                              description: `ERROR! ${error.message}`,
-                            });
-                          }}
-                        />
-                      </FormControl>
-                    </div>
-                  </CardContent>
-                </Card>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className='upload-field'>
-          {/* Colors */}
-          <div className='mb-4'>
-            <FormLabel>Available Colors</FormLabel>
-            <div className='flex flex-wrap gap-2 mt-2'>
-              {colors.map((c) => {
-                const checked = (form.getValues('colorIds') || []).includes(c.id);
-                return (
-                  <label key={c.id} className='inline-flex items-center space-x-2'>
-                    <input
-                      type='checkbox'
-                      checked={checked}
-                      onChange={(e) => {
-                        const current = form.getValues('colorIds') || [];
-                        if (e.target.checked) {
-                          form.setValue('colorIds', [...current, c.id]);
-                        } else {
-                          form.setValue('colorIds', current.filter((id: string) => id !== c.id));
-                        }
-                      }}
-                    />
-                    <span>{c.name}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Sizes */}
-          <div className='mb-4'>
-            <FormLabel>Available Sizes</FormLabel>
-            <div className='flex flex-wrap gap-2 mt-2'>
-              {sizes.map((s) => {
-                const checked = (form.getValues('sizeIds') || []).includes(s.id);
-                return (
-                  <label key={s.id} className='inline-flex items-center space-x-2'>
-                    <input
-                      type='checkbox'
-                      checked={checked}
-                      onChange={(e) => {
-                        const current = form.getValues('sizeIds') || [];
-                        if (e.target.checked) {
-                          form.setValue('sizeIds', [...current, s.id]);
-                        } else {
-                          form.setValue('sizeIds', current.filter((id: string) => id !== s.id));
-                        }
-                      }}
-                    />
-                    <span>{s.name}</span>
-                  </label>
-                );
-              })}
-            </div>
+        {/* -------------------- Images Upload -------------------- */}
+        <FormField
+          control={form.control}
+          name="images"
+          render={() => (
+            <FormItem className="w-full">
+              <FormLabel>Images</FormLabel>
+              <Card>
+                <CardContent className="space-y-2 mt-2 min-h-48">
+                  <div className="flex-start space-x-2">
+                    {images.map((image) => (
+                      <Image
+                        key={image}
+                        src={image}
+                        alt="product image"
+                        className="w-20 h-20 object-cover object-center rounded-sm"
+                        width={100}
+                        height={100}
+                      />
+                    ))}
+                    <FormControl>
+                      <UploadButton
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: { url: string }[]) => {
+                          form.setValue('images', [...images, res[0].url]);
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast({
+                            variant: 'destructive',
+                            description: `ERROR! ${error.message}`,
+                          });
+                        }}
+                      />
+                    </FormControl>
+                  </div>
+                </CardContent>
+              </Card>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* -------------------- Available Colors -------------------- */}
+        <div className="mb-4">
+          <FormLabel>Available Colors</FormLabel>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {colors.map((c) => {
+              const checked =
+                (form.getValues('colorIds') || []).includes(c.id);
+              return (
+                <label
+                  key={c.id}
+                  className="inline-flex items-center space-x-1 text-xs px-2 py-1 border rounded-md"
+                >
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={checked}
+                    onChange={(e) => {
+                      const current = form.getValues('colorIds') || [];
+                      form.setValue(
+                        'colorIds',
+                        e.target.checked
+                          ? [...current, c.id]
+                          : current.filter((id: string) => id !== c.id)
+                      );
+                    }}
+                  />
+                  <span>{c.name}</span>
+                </label>
+              );
+            })}
           </div>
-          {/* isFeatured */}
-          Featured Product
+        </div>
+
+        {/* -------------------- Available Sizes -------------------- */}
+        <div className="mb-4">
+          <FormLabel>Available Sizes</FormLabel>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {sizes.map((s) => {
+              const checked =
+                (form.getValues('sizeIds') || []).includes(s.id);
+              return (
+                <label
+                  key={s.id}
+                  className="inline-flex items-center space-x-1 text-xs px-2 py-1 border rounded-md"
+                >
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={checked}
+                    onChange={(e) => {
+                      const current = form.getValues('sizeIds') || [];
+                      form.setValue(
+                        'sizeIds',
+                        e.target.checked
+                          ? [...current, s.id]
+                          : current.filter((id: string) => id !== s.id)
+                      );
+                    }}
+                  />
+                  <span>{s.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* -------------------- Featured Product -------------------- */}
+        <div className="mb-4">
+          <FormLabel>Featured Product</FormLabel>
           <Card>
-            <CardContent className='space-y-2 mt-2'>
+            <CardContent className="space-y-2 mt-2">
               <FormField
                 control={form.control}
-                name='isFeatured'
-                render={({ field }) => (
-                  <FormItem className='space-x-2 items-center'>
+                name="isFeatured"
+                render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'isFeatured'> }) => (
+                  <FormItem className="flex items-center space-x-2">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -382,16 +323,15 @@ const ProductForm = ({
               {isFeatured && banner && (
                 <Image
                   src={banner}
-                  alt='banner image'
-                  className='w-full object-cover object-center rounded-sm'
+                  alt="banner image"
+                  className="w-full object-cover object-center rounded-sm"
                   width={1920}
                   height={680}
                 />
               )}
-
               {isFeatured && !banner && (
                 <UploadButton
-                  endpoint='imageUploader'
+                  endpoint="imageUploader"
                   onClientUploadComplete={(res: { url: string }[]) => {
                     form.setValue('banner', res[0].url);
                   }}
@@ -406,41 +346,35 @@ const ProductForm = ({
             </CardContent>
           </Card>
         </div>
-        <div>
-          {/* Description */}
-          <FormField
-            control={form.control}
-            name='description'
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof insertProductSchema>,
-                'description'
-              >;
-            }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder='Enter product description'
-                    className='resize-none'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+
+        {/* -------------------- Description -------------------- */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'description'> }) => (
+            <FormItem className="w-full">
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter product description"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* -------------------- Submit Button -------------------- */}
         <div>
           <Button
-            type='submit'
-            size='lg'
+            type="submit"
+            size="lg"
             disabled={form.formState.isSubmitting}
-            className='button col-span-2 w-full'
+            className="w-full"
           >
-            {form.formState.isSubmitting ? 'Submitting' : `${type} Product`}
+            {form.formState.isSubmitting ? 'Submitting...' : `${type} Product`}
           </Button>
         </div>
       </form>

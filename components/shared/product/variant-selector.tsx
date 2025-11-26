@@ -5,7 +5,7 @@ import AddToCart from './add-to-cart';
 import { Cart, CartItem } from '@/types';
 import ProductPrice from '@/components/shared/product/product-price';
 
-type Variant = {
+export type Variant = {
   id: string;
   sku?: string | null;
   price: string | number | Decimal;
@@ -29,11 +29,13 @@ export default function VariantSelector({
   product,
   cart,
   onColorSelected,
+  onVariantChange,
 }: {
   variants: Variant[];
   product: Product;
   cart?: Cart;
   onColorSelected?: (colorSlug: string | undefined, colorName: string | undefined) => void;
+  onVariantChange?: (variant: Variant | undefined) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
@@ -123,6 +125,12 @@ export default function VariantSelector({
       onColorSelected(undefined, undefined);
     }
   }, [selectedColor, onColorSelected, colors]);
+
+  useEffect(() => {
+    if (onVariantChange) {
+      onVariantChange(selectedVariant);
+    }
+  }, [selectedVariant, onVariantChange]);
 
   if (!mounted) {
     return null;
