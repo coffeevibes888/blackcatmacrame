@@ -11,8 +11,8 @@ import { Prisma } from '@prisma/client';
 // Type for variant creation
 type VariantInput = {
   productId: string;
-  colorId: string;
-  sizeId: string;
+  colorId?: string;
+  sizeId?: string;
   price: number;
   stock: number;
   images: string[];
@@ -28,6 +28,25 @@ export async function getLatestProducts() {
   return convertToPlainObject(
     data.map((p) => ({
       ...p,
+      subCategory: p.subCategory ?? undefined,
+      price: Number(p.price),
+      rating: Number(p.rating),
+    }))
+  );
+}
+
+// Get latest products for a specific category (for themed sections like Faith, Funny, Deals, etc.)
+export async function getLatestProductsByCategory(category: string, limit = LATEST_PRODUCTS_LIMIT) {
+  const data = await prisma.product.findMany({
+    where: { category },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return convertToPlainObject(
+    data.map((p) => ({
+      ...p,
+      subCategory: p.subCategory ?? undefined,
       price: Number(p.price),
       rating: Number(p.rating),
     }))
@@ -73,6 +92,7 @@ export async function getProductById(productId: string) {
 
   const normalized = {
     ...data,
+    subCategory: data.subCategory ?? undefined,
     price: Number(data.price),
     rating: Number(data.rating),
   };
@@ -164,7 +184,6 @@ export async function getAllProducts({
   };
 }
 
-
 // Delete a product
 export async function deleteProduct(id: string) {
   try {
@@ -192,25 +211,22 @@ export async function createProduct(data: z.infer<typeof insertProductSchema>) {
   try {
     const product = insertProductSchema.parse(data);
     
-    // Extract only Product model fields, excluding colorIds and sizeIds
-    const { colorIds, sizeIds, ...productData } = product;
+    // Extract only Product model fields, excluding sizeIds (color selection removed)
+    const { sizeIds, ...productData } = product;
     
-    // create product and optionally create variants from provided colorIds/sizeIds
+    // create product and optionally create variants from provided sizeIds
     const created = await prisma.product.create({ data: productData });
 
-    if (colorIds && sizeIds) {
+    if (sizeIds && sizeIds.length) {
       const variants: VariantInput[] = [];
-      for (const colorId of colorIds) {
-        for (const sizeId of sizeIds) {
-          variants.push({
-            productId: created.id,
-            colorId,
-            sizeId,
-            price: Number(product.price),
-            stock: product.stock,
-            images: product.images || [],
-          });
-        }
+      for (const sizeId of sizeIds) {
+        variants.push({
+          productId: created.id,
+          sizeId,
+          price: Number(product.price),
+          stock: product.stock,
+          images: product.images || [],
+        });
       }
       if (variants.length) {
         await prisma.productVariant.createMany({ data: variants });
@@ -240,26 +256,25 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
 
     // Update product and optionally refresh variants
     await prisma.$transaction(async (tx) => {
-      // Extract only Product model fields, excluding colorIds and sizeIds
-      const { colorIds, sizeIds, ...productData } = product;
+      // Extract only Product model fields, excluding sizeIds (color selection removed)
+      const { sizeIds, ...productData } = product;
       
       await tx.product.update({ where: { id: product.id }, data: productData });
 
-      // If colorIds and sizeIds provided, remove existing variants and recreate
-      if (colorIds && sizeIds) {
+      // If sizeIds provided, remove existing variants and recreate (colorId no longer selected in UI)
+      if (sizeIds && sizeIds.length) {
         await tx.productVariant.deleteMany({ where: { productId: product.id } });
         const variants: VariantInput[] = [];
-        for (const colorId of colorIds) {
-          for (const sizeId of sizeIds) {
-            variants.push({
-              productId: product.id,
-              colorId,
-              sizeId,
-              price: Number(product.price),
-              stock: product.stock,
-              images: product.images || [],
-            });
-          }
+        for (const sizeId of sizeIds) {
+          if (!sizeId) continue; // skip any empty size ids to avoid invalid UUIDs
+
+          variants.push({
+            productId: product.id,
+            sizeId,
+            price: Number(product.price),
+            stock: product.stock,
+            images: product.images || [],
+          });
         }
         if (variants.length) {
           await tx.productVariant.createMany({ data: variants });
@@ -288,6 +303,35 @@ export async function getAllCategories() {
   return data;
 }
 
+// Get category tree with distinct subcategories (for navigation menus)
+export async function getCategoryTree() {
+  const rows = await prisma.product.groupBy({
+    by: ['category', 'subCategory'],
+    _count: { _all: true },
+  });
+
+  const map = new Map<string, { count: number; subCategories: string[] }>();
+
+  for (const row of rows) {
+    const entry = map.get(row.category) ?? { count: 0, subCategories: [] };
+    entry.count += row._count._all ?? 0;
+
+    if (row.subCategory) {
+      if (!entry.subCategories.includes(row.subCategory)) {
+        entry.subCategories.push(row.subCategory);
+      }
+    }
+
+    map.set(row.category, entry);
+  }
+
+  return Array.from(map.entries()).map(([category, value]) => ({
+    category,
+    count: value.count,
+    subCategories: value.subCategories,
+  }));
+}
+
 // Get featured products
 export async function getFeaturedProducts() {
   const data = await prisma.product.findMany({
@@ -299,6 +343,7 @@ export async function getFeaturedProducts() {
   return convertToPlainObject(
     data.map((p) => ({
       ...p,
+      subCategory: p.subCategory ?? undefined,
       price: Number(p.price),
       rating: Number(p.rating),
     }))

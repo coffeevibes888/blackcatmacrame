@@ -54,6 +54,12 @@ export default async function UserThreadPage({
     );
   }
 
+  // Mark this thread as read for the current user when they view it
+  await prisma.threadParticipant.updateMany({
+    where: { threadId: thread.id, userId },
+    data: { lastReadAt: new Date() },
+  });
+
   return (
     <main className="w-full min-h-screen px-4 py-8 md:px-8">
       <div className="max-w-3xl mx-auto space-y-4">

@@ -62,22 +62,18 @@ const ProductForm = ({
   };
 
   const images = (form.watch('images') as string[]) || [];
+  const imageColors = (form.watch('imageColors') as string[]) || [];
   const isFeatured = form.watch('isFeatured');
   const banner = form.watch('banner');
-  const [colors, setColors] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [sizes, setSizes] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
-        const [cRes, sRes] = await Promise.all([
-          fetch('/api/colors'),
-          fetch('/api/sizes'),
-        ]);
-        if (cRes.ok) setColors(await cRes.json());
-        if (sRes.ok) setSizes(await sRes.json());
+        const res = await fetch('/api/sizes');
+        if (res.ok) setSizes(await res.json());
       } catch (err) {
-        console.error('Error fetching colors/sizes:', err);
+        console.error('Error fetching sizes:', err);
       }
     })();
   }, []);
@@ -130,7 +126,7 @@ const ProductForm = ({
           />
         </div>
 
-        {/* -------------------- Category & Brand -------------------- */}
+        {/* -------------------- Category, Sub Category & Brand -------------------- */}
         <div className="flex flex-col md:flex-row gap-5">
           <FormField
             control={form.control}
@@ -140,6 +136,20 @@ const ProductForm = ({
                 <FormLabel>Category</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter category" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="subCategory"
+            render={({ field }: { field: ControllerRenderProps<z.infer<typeof insertProductSchema>, 'subCategory'> }) => (
+              <FormItem className="w-full">
+                <FormLabel>Sub Category</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter sub category (e.g. T-shirt, Hoodie, Hat)" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -192,80 +202,60 @@ const ProductForm = ({
           />
         </div>
 
-        {/* -------------------- Images Upload -------------------- */}
+        {/* -------------------- Images Upload with Color Labels -------------------- */}
         <FormField
           control={form.control}
           name="images"
           render={() => (
             <FormItem className="w-full">
-              <FormLabel>Images</FormLabel>
+              <FormLabel>Images & Colors</FormLabel>
               <Card>
-                <CardContent className="space-y-2 mt-2 min-h-48">
-                  <div className="flex-start space-x-2">
-                    {images.map((image) => (
-                      <Image
-                        key={image}
-                        src={image}
-                        alt="product image"
-                        className="w-20 h-20 object-cover object-center rounded-sm"
-                        width={100}
-                        height={100}
-                      />
+                <CardContent className="space-y-4 mt-2 min-h-48">
+                  <div className="flex flex-wrap gap-4">
+                    {images.map((image, index) => (
+                      <div key={image} className="flex flex-col items-start space-y-2">
+                        <Image
+                          src={image}
+                          alt="product image"
+                          className="w-20 h-20 object-cover object-center rounded-sm"
+                          width={100}
+                          height={100}
+                        />
+                        <Input
+                          placeholder="Color for this image (e.g. Black, Red, Navy)"
+                          value={imageColors[index] || ''}
+                          onChange={(e) => {
+                            const next = [...imageColors];
+                            next[index] = e.target.value;
+                            form.setValue('imageColors', next);
+                          }}
+                        />
+                      </div>
                     ))}
-                    <FormControl>
-                      <UploadButton
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: { url: string }[]) => {
-                          form.setValue('images', [...images, res[0].url]);
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast({
-                            variant: 'destructive',
-                            description: `ERROR! ${error.message}`,
-                          });
-                        }}
-                      />
-                    </FormControl>
                   </div>
+                  <FormControl>
+                    <UploadButton
+                      endpoint="imageUploader"
+                      onClientUploadComplete={(res: { url: string }[]) => {
+                        const url = res[0]?.url;
+                        if (!url) return;
+                        form.setValue('images', [...images, url]);
+                        form.setValue('imageColors', [...imageColors, '']);
+                      }}
+                      onUploadError={(error: Error) => {
+                        toast({
+                          variant: 'destructive',
+                          description: `ERROR! ${error.message}`,
+                        });
+                      }}
+                    />
+                  </FormControl>
                 </CardContent>
               </Card>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* -------------------- Available Colors -------------------- */}
-        <div className="mb-4">
-          <FormLabel>Available Colors</FormLabel>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {colors.map((c) => {
-              const checked =
-                (form.getValues('colorIds') || []).includes(c.id);
-              return (
-                <label
-                  key={c.id}
-                  className="inline-flex items-center space-x-1 text-xs px-2 py-1 border rounded-md"
-                >
-                  <input
-                    type="checkbox"
-                    className="h-3 w-3"
-                    checked={checked}
-                    onChange={(e) => {
-                      const current = form.getValues('colorIds') || [];
-                      form.setValue(
-                        'colorIds',
-                        e.target.checked
-                          ? [...current, c.id]
-                          : current.filter((id: string) => id !== c.id)
-                      );
-                    }}
-                  />
-                  <span>{c.name}</span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
 
         {/* -------------------- Available Sizes -------------------- */}
         <div className="mb-4">

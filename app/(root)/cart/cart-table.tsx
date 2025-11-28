@@ -130,10 +130,18 @@ const CartTable = ({ cart, hasShippingAddress }: { cart?: Cart; hasShippingAddre
                         </span>
                       </Link>
                     </TableCell>
-                    <TableCell className='flex-center gap-2'>
-                      <RemoveButton item={item} />
-                      <span>{item.qty}</span>
-                      <AddButton item={item} />
+                    <TableCell className='flex flex-col items-center gap-1'>
+                      <div className='flex items-center gap-2'>
+                        <RemoveButton item={item} />
+                        <span>{item.qty}</span>
+                        <AddButton item={item} />
+                      </div>
+                      <Link
+                        href={`/product/${item.slug}`}
+                        className='text-xs text-blue-600 hover:underline'
+                      >
+                        Edit color / size
+                      </Link>
                     </TableCell>
                     <TableCell className='text-right'>${item.price}</TableCell>
                   </TableRow>

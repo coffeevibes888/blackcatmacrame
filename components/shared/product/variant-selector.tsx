@@ -22,6 +22,7 @@ type Product = {
   slug: string;
   price: string | number;
   images?: string[];
+  imageColors?: string[];
 };
 
 export default function VariantSelector({
@@ -40,6 +41,7 @@ export default function VariantSelector({
   const [mounted, setMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
+  const [quantity, setQuantity] = useState<number>(1);
 
   useEffect(() => {
     setMounted(true);
@@ -57,34 +59,58 @@ export default function VariantSelector({
     return Array.from(map.values());
   }, [variants, selectedSize]);
 
+  const imageColors = useMemo(() => {
+    if (!product.imageColors || !product.images || product.imageColors.length === 0) {
+      return [] as { id: string; name: string; slug: string }[];
+    }
+
+    const seen = new Map<string, { id: string; name: string; slug: string }>();
+    product.imageColors.forEach((name) => {
+      if (!name) return;
+      const slug = name.toLowerCase().replace(/\s+/g, '-');
+      if (!seen.has(slug)) {
+        seen.set(slug, { id: slug, name, slug });
+      }
+    });
+
+    return Array.from(seen.values());
+  }, [product.imageColors, product.images]);
+
   const sizes = useMemo(() => {
     let filtered = variants;
-    if (selectedColor) {
+
+    // Only filter sizes by selectedColor when we have real variant-based colors.
+    // If colors are coming only from imageColors, keep all sizes visible.
+    if (colors.length > 0 && selectedColor) {
       filtered = filtered.filter((v) => v.color?.slug === selectedColor);
     }
+
     const map = new Map<string, { id: string; name: string; slug: string }>();
     filtered.forEach((v) => {
       if (v.size) map.set(v.size.slug, v.size);
     });
     return Array.from(map.values());
-  }, [variants, selectedColor]);
+  }, [variants, selectedColor, colors.length]);
+
+  const effectiveColors = colors.length > 0 ? colors : imageColors;
 
   const selectedVariant = useMemo(() => {
     let filtered = variants;
-    
-    if (selectedColor) {
+
+    // Only filter by selectedColor when we actually have variant-based colors.
+    // When colors come from imageColors only, keep all variants and filter by size only.
+    if (colors.length > 0 && selectedColor) {
       filtered = filtered.filter((v) => v.color?.slug === selectedColor);
     }
-    
+
     if (selectedSize) {
       filtered = filtered.filter((v) => v.size?.slug === selectedSize);
     }
-    
+
     console.log('[VariantSelector] Selected variant:', filtered[0]);
     return filtered[0];
-  }, [variants, selectedColor, selectedSize]);
+  }, [variants, selectedColor, selectedSize, colors.length]);
 
-  // Use the first image from the selected variant to show the color variation
   const variantImage = selectedVariant?.images?.[0];
   const productImage = product.images?.[0];
   const image = variantImage || productImage;
@@ -96,7 +122,7 @@ export default function VariantSelector({
     productId: product.id,
     name: product.name,
     slug: product.slug,
-    qty: 1,
+    qty: quantity,
     image: image || '',
     price: Number(selectedVariant?.price ?? product.price),
     variantId: selectedVariant?.id,
@@ -106,8 +132,8 @@ export default function VariantSelector({
 
   const hasRequiredSelections = () => {
     if (!selectedVariant) return false;
-    if (colors.length === 0 && sizes.length === 0) return true;
-    if (colors.length > 0 && !selectedColor) return false;
+    if (effectiveColors.length === 0 && sizes.length === 0) return true;
+    if (effectiveColors.length > 0 && !selectedColor) return false;
     if (sizes.length > 0 && !selectedSize) return false;
     return true;
   };
@@ -117,14 +143,14 @@ export default function VariantSelector({
 
   useEffect(() => {
     if (onColorSelected && selectedColor) {
-      const colorName = colors.find(c => c.slug === selectedColor)?.name;
+      const colorName = effectiveColors.find(c => c.slug === selectedColor)?.name;
       console.log('[VariantSelector] Color changed to:', selectedColor, colorName);
       onColorSelected(selectedColor, colorName);
     } else if (onColorSelected && !selectedColor) {
       // Color was deselected
       onColorSelected(undefined, undefined);
     }
-  }, [selectedColor, onColorSelected, colors]);
+  }, [selectedColor, onColorSelected, effectiveColors]);
 
   useEffect(() => {
     if (onVariantChange) {
@@ -138,7 +164,7 @@ export default function VariantSelector({
 
   return (
     <div className='space-y-4'>
-      {colors.length > 0 && (
+      {effectiveColors.length > 0 && (
         <div>
           <label className='block text-sm font-medium mb-1'>Color</label>
           <select
@@ -151,7 +177,7 @@ export default function VariantSelector({
             }}
           >
             <option value=''>Select color</option>
-            {colors.map((c) => (
+            {effectiveColors.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.name}
               </option>
@@ -181,8 +207,22 @@ export default function VariantSelector({
         </div>
       )}
 
-      <div className='flex items-center justify-between'>
+      <div className='flex items-center justify-between gap-4'>
         <ProductPrice value={Number(selectedVariant?.price ?? product.price)} />
+        <div className='flex items-center gap-2'>
+          <label className='text-sm'>Qty</label>
+          <input
+            type='number'
+            min={1}
+            max={99}
+            value={quantity}
+            onChange={(e) => {
+              const val = Number(e.target.value) || 1;
+              setQuantity(Math.min(Math.max(val, 1), 99));
+            }}
+            className='w-16 h-10 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          />
+        </div>
       </div>
 
       {shouldShowButton ? (

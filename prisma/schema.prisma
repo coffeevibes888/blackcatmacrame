@@ -12,7 +12,9 @@ model Product {
   name        String
   slug        String      @unique(map: "product_slug_idx")
   category    String
+  subCategory String?
   images      String[]
+  imageColors String[]   @default([])
   brand       String
   description String
   stock       Int

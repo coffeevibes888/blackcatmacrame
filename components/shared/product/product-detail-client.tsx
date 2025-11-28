@@ -21,6 +21,7 @@ type Product = {
   price: number;
   stock: number;
   images: string[];
+  imageColors?: string[];
   variants?: Variant[];
 };
 
@@ -36,6 +37,15 @@ export default function ProductDetailClient({
   const baseImages = useMemo(() => product.images || [], [product.images]);
   const [activeImage, setActiveImage] = useState<string>(baseImages[0] || '');
   const [activeColorName, setActiveColorName] = useState<string | undefined>();
+
+  // Map imageColors to base images by index
+  const imageColorMap = useMemo(
+    () => {
+      if (!product.imageColors || !product.imageColors.length) return [] as { image: string; colorName: string }[];
+      return baseImages.map((img, index) => ({ image: img, colorName: product.imageColors?.[index] || '' }));
+    },
+    [baseImages, product.imageColors]
+  );
 
   // Combine all unique images for thumbnails
   const allImages = useMemo(() => {
@@ -66,6 +76,18 @@ export default function ProductDetailClient({
       if (!colorSlug && !colorName) {
         setActiveImage(baseImages[0] || '');
         return;
+      }
+
+      // 0) Try to map selected color name directly to a base image via imageColors
+      if (colorName) {
+        const directMatch = imageColorMap.find(
+          (entry) => entry.colorName && entry.colorName.toLowerCase() === colorName.toLowerCase()
+        );
+
+        if (directMatch) {
+          setActiveImage(directMatch.image);
+          return;
+        }
       }
 
       const variants = product.variants || [];
@@ -107,7 +129,7 @@ export default function ProductDetailClient({
         setActiveImage(baseImages[0]);
       }
     },
-    [allImages, baseImages, product.variants, variantColors]
+    [allImages, baseImages, product.variants, variantColors, imageColorMap]
   );
 
   // Handle variant change (size or color)

@@ -38,6 +38,12 @@ export async function GET(
       }
     }
 
+    // Mark this thread as read for the current user when they view it
+    await prisma.threadParticipant.updateMany({
+      where: { threadId, userId },
+      data: { lastReadAt: new Date() },
+    });
+
     return NextResponse.json({ thread });
   } catch (error) {
     // eslint-disable-next-line no-console
