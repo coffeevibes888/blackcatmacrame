@@ -30,6 +30,7 @@ export default async function SuperAdminPage() {
       userEmail={session.user.email || ''}
       summary={serializedSummary}
       analytics={serializedAnalytics}
+      currentUser={session.user}
     />
   );
 }

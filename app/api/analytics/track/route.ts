@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
 
     const sessionCartId = request.cookies.get('sessionCartId')?.value;
     const country = request.headers.get('x-vercel-ip-country');
+    const region = request.headers.get('x-vercel-ip-country-region');
+    const city = request.headers.get('x-vercel-ip-city');
     const userAgent = request.headers.get('user-agent');
 
     if (!sessionCartId || !path) {
@@ -20,6 +22,8 @@ export async function POST(request: NextRequest) {
       path,
       referrer: referrer || null,
       country: country || null,
+      region: region || null,
+      city: city || null,
       userAgent: userAgent || null,
     });
 

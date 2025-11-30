@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import type { Session } from "next-auth";
 import {
   Card,
   CardContent,
@@ -47,6 +48,9 @@ type AnalyticsEvent = {
   sessionCartId?: string | null;
   path: string;
   country?: string | null;
+  region?: string | null;
+  city?: string | null;
+  userAgent?: string | null;
 };
 
 type DevicesBreakdown = {
@@ -95,6 +99,7 @@ interface SuperAdminDashboardProps {
   userEmail: string;
   summary: StoreSummary;
   analytics: AnalyticsSummary;
+  currentUser?: Session["user"];
 }
 
 function formatDuration(ms: number) {
@@ -108,9 +113,24 @@ function formatDuration(ms: number) {
   const remMinutes = minutes % 60;
   return `${hours}h ${remMinutes}m`;
 }
+function parseOS(userAgent?: string | null): string {
+  if (!userAgent) return "Unknown";
+  const ua = userAgent.toLowerCase();
 
-const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashboardProps) => {
+  if (ua.includes("windows nt")) return "Windows";
+  if (ua.includes("mac os x") || ua.includes("macintosh")) return "macOS";
+  if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ios")) return "iOS";
+  if (ua.includes("android")) return "Android";
+  if (ua.includes("linux")) return "Linux";
+
+  return "Other";
+}
+
+const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: SuperAdminDashboardProps) => {
   const [activeView, setActiveView] = useState<(typeof views)[number]["id"]>("overview");
+  const [activeTrafficDetail, setActiveTrafficDetail] = useState<
+    "today" | "yesterday" | "last7" | null
+  >(null);
 
   const {
     totalEvents,
@@ -125,6 +145,50 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
     devices,
     averageSessionDurationMs,
   } = analytics;
+
+  const osBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const ev of recentEvents as AnalyticsEvent[]) {
+      const os = parseOS(ev.userAgent);
+      counts[os] = (counts[os] || 0) + 1;
+    }
+
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [recentEvents]);
+
+  const trafficDetailEvents = useMemo(() => {
+    if (!activeTrafficDetail) return [] as AnalyticsEvent[];
+
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+    const startOf7DaysAgo = new Date(startOfToday);
+    startOf7DaysAgo.setDate(startOf7DaysAgo.getDate() - 7);
+
+    return recentEvents.filter((ev) => {
+      const created = new Date(ev.createdAt);
+
+      if (activeTrafficDetail === "today") {
+        return created >= startOfToday;
+      }
+
+      if (activeTrafficDetail === "yesterday") {
+        return created >= startOfYesterday && created < startOfToday;
+      }
+
+      if (activeTrafficDetail === "last7") {
+        return created >= startOf7DaysAgo;
+      }
+
+      return false;
+    });
+  }, [activeTrafficDetail, recentEvents]);
 
   const suspiciousSessionsMap = new Map<string, number>();
   for (const ev of recentEvents) {
@@ -144,6 +208,52 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
           High-level overview of store performance, traffic, and activity for {userEmail}.
         </p>
       </section>
+
+      {currentUser && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold tracking-tight">Current User Details</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">Name</p>
+                <p className="font-medium">{currentUser.name || "N/A"}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <p className="font-medium">{currentUser.email || "N/A"}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">Role</p>
+                <p className="font-medium">{currentUser.role || "user"}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">Phone</p>
+                <p className="font-medium">{currentUser.phoneNumber || "N/A"}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">Phone Verified</p>
+                <p className="font-medium">
+                  {currentUser.phoneVerified ? "Yes" : "No"}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 space-y-1 text-sm">
+                <p className="text-xs font-medium text-muted-foreground">User ID</p>
+                <p className="font-mono text-xs truncate">{currentUser.id}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Store Performance</h2>
@@ -287,19 +397,34 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
               <p className="text-2xl font-semibold">{formatNumber(currentOnlineVisitors)}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer"
+            onClick={() =>
+              setActiveTrafficDetail((prev) => (prev === "today" ? null : "today"))
+            }
+          >
             <CardContent className="pt-4">
               <p className="text-xs font-medium text-muted-foreground mb-1">Page Views Today</p>
               <p className="text-2xl font-semibold">{formatNumber(eventsToday)}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer"
+            onClick={() =>
+              setActiveTrafficDetail((prev) => (prev === "yesterday" ? null : "yesterday"))
+            }
+          >
             <CardContent className="pt-4">
               <p className="text-xs font-medium text-muted-foreground mb-1">Page Views Yesterday</p>
               <p className="text-2xl font-semibold">{formatNumber(eventsYesterday)}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer"
+            onClick={() =>
+              setActiveTrafficDetail((prev) => (prev === "last7" ? null : "last7"))
+            }
+          >
             <CardContent className="pt-4">
               <p className="text-xs font-medium text-muted-foreground mb-1">Last 7 Days Page Views</p>
               <p className="text-2xl font-semibold">{formatNumber(eventsLast7Days)}</p>
@@ -307,6 +432,57 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
           </Card>
         </div>
       </section>
+
+      {activeTrafficDetail && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {activeTrafficDetail === "today" && "Page Views Today - Detail"}
+            {activeTrafficDetail === "yesterday" && "Page Views Yesterday - Detail"}
+            {activeTrafficDetail === "last7" && "Last 7 Days Page Views - Detail"}
+          </h2>
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>When</TableHead>
+                  <TableHead>Session</TableHead>
+                  <TableHead>Path</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>OS</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {trafficDetailEvents.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-sm text-muted-foreground">
+                      No matching events found in the recent window.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {trafficDetailEvents.map((ev) => (
+                  <TableRow key={ev.id}>
+                    <TableCell>{formatDateTime(new Date(ev.createdAt)).dateTime}</TableCell>
+                    <TableCell className="text-xs font-mono truncate max-w-[140px]">
+                      {ev.sessionCartId}
+                    </TableCell>
+                    <TableCell>{ev.path}</TableCell>
+                    <TableCell>
+                      {[
+                        ev.city || undefined,
+                        ev.region || undefined,
+                        ev.country || undefined,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "Unknown"}
+                    </TableCell>
+                    <TableCell>{parseOS(ev.userAgent)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+      )}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-3">
@@ -402,13 +578,14 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
                   <TableHead>When</TableHead>
                   <TableHead>Session</TableHead>
                   <TableHead>Path</TableHead>
-                  <TableHead>Country</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>OS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {recentEvents.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-sm text-muted-foreground">
+                    <TableCell colSpan={5} className="text-sm text-muted-foreground">
                       No recent activity yet.
                     </TableCell>
                   </TableRow>
@@ -420,7 +597,16 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
                       {ev.sessionCartId}
                     </TableCell>
                     <TableCell>{ev.path}</TableCell>
-                    <TableCell>{ev.country ?? "Unknown"}</TableCell>
+                    <TableCell>
+                      {[
+                        ev.city || undefined,
+                        ev.region || undefined,
+                        ev.country || undefined,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "Unknown"}
+                    </TableCell>
+                    <TableCell>{parseOS(ev.userAgent)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -506,6 +692,35 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics }: SuperAdminDashbo
               <p className="text-2xl font-semibold">{formatNumber(devices?.other ?? 0)}</p>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Operating Systems (Recent)</h2>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden max-w-xl">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>OS</TableHead>
+                <TableHead className="text-right">Events</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {osBreakdown.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-sm text-muted-foreground">
+                    No recent activity to determine OS distribution.
+                  </TableCell>
+                </TableRow>
+              )}
+              {osBreakdown.map(([os, count]) => (
+                <TableRow key={os}>
+                  <TableCell>{os}</TableCell>
+                  <TableCell className="text-right">{formatNumber(count)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </section>
     </div>

@@ -9,10 +9,12 @@ export async function trackPageView(params: {
   path: string;
   referrer?: string | null;
   country?: string | null;
+  region?: string | null;
+  city?: string | null;
   userAgent?: string | null;
 }) {
   try {
-    const { sessionCartId, userId, path, referrer, country, userAgent } = params;
+    const { sessionCartId, userId, path, referrer, country, region, city, userAgent } = params;
 
     if (!sessionCartId || !path) return;
 
@@ -23,6 +25,8 @@ export async function trackPageView(params: {
         path,
         referrer: referrer ?? undefined,
         country: country ?? undefined,
+        region: region ?? undefined,
+        city: city ?? undefined,
         userAgent: userAgent ?? undefined,
       },
     });
