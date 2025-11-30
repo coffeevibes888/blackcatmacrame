@@ -32,18 +32,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
-        // Enforce stronger password rules for superAdmin users
-        if (
-          user &&
-          user.password &&
-          user.role === 'superAdmin' &&
-          typeof credentials.password === 'string'
-        ) {
-          if (credentials.password.length < 15) {
-            return null;
-          }
-        }
-
         // Check if user exists and if the password matches
         if (user && user.password) {
           const isMatch = await compare(

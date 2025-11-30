@@ -28,7 +28,7 @@ export async function GET() {
     }
 
     const userId = session.user.id as string;
-    const isAdmin = session.user.role === 'admin';
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'superAdmin';
 
     let newOrders = 0;
     let openMessages = 0;

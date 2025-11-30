@@ -29,7 +29,7 @@ export async function GET(
     }
 
     const userId = session.user.id as string;
-    const isAdmin = session.user.role === 'admin';
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'superAdmin';
 
     if (!isAdmin) {
       const isParticipant = thread.participants.some((p) => p.userId === userId);
@@ -83,7 +83,7 @@ export async function POST(
     }
 
     const userId = session.user.id as string;
-    const isAdmin = session.user.role === 'admin';
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'superAdmin';
 
     if (!isAdmin) {
       const isParticipant = thread.participants.some((p) => p.userId === userId);

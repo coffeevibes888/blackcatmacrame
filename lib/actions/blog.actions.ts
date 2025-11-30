@@ -10,7 +10,7 @@ import { insertBlogPostSchema, updateBlogPostSchema } from "@/lib/validators";
 export async function createBlogPost(data: z.infer<typeof insertBlogPostSchema>) {
   try {
     const session = await auth();
-    if (session?.user?.role !== "admin") {
+    if (session?.user?.role !== "admin" && session?.user?.role !== "superAdmin") {
       throw new Error("Only admins can create blog posts");
     }
     const parsed = insertBlogPostSchema.parse({
@@ -34,7 +34,7 @@ export async function createBlogPost(data: z.infer<typeof insertBlogPostSchema>)
 export async function deleteBlogPost(id: string) {
   try {
     const session = await auth();
-    if (session?.user?.role !== "admin") {
+    if (session?.user?.role !== "admin" && session?.user?.role !== "superAdmin") {
       throw new Error("Only admins can delete blog posts");
     }
 
@@ -52,7 +52,7 @@ export async function deleteBlogPost(id: string) {
 export async function updateBlogPost(data: z.infer<typeof updateBlogPostSchema>) {
   try {
     const session = await auth();
-    if (session?.user?.role !== "admin") {
+    if (session?.user?.role !== "admin" && session?.user?.role !== "superAdmin") {
       throw new Error("Only admins can update blog posts");
     }
 
@@ -193,7 +193,7 @@ export async function getBlogPostBySlug(slug: string) {
 
 export async function getAllBlogPostsForAdmin() {
   const session = await auth();
-  if (session?.user?.role !== "admin") {
+  if (session?.user?.role !== "admin" && session?.user?.role !== "superAdmin") {
     throw new Error("Only admins can view all posts");
   }
 
