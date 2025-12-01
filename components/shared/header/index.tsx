@@ -38,8 +38,7 @@ const Header = async () => {
           <Link href='/' className="flex items-center">
             <CategoryDrawer />
             <div className="relative w-36 h-36">
-              <Image
-                src='/images/2.svg'
+              <Image src='/images/2.svg'
                 fill
                 className="object-contain"
                 alt="Rocken My Vibe Logo"
@@ -55,12 +54,11 @@ const Header = async () => {
           <Link href='/blog' className="m-2.5 hover:text-black hover:underline">Blog</Link>
           <Link href='/contact' className="m-2.5 hover:text-black hover:underline">Contact</Link>
 
-          {/* Products mega menu */}
+        
           <div className="relative m-2.5 group">
-            <button className="hover:text-black hover:underline">Products</button>
+            {/* <button className="hover:text-black hover:underline">Products</button> */}
             {categories.length > 0 && (
               <div className="absolute left-0 top-full mt-1 hidden group-hover:flex bg-white text-black rounded-md shadow-lg z-50 min-w-[520px]">
-                {/* Main categories column */}
                 <div className="w-52 border-r border-gray-200 py-3">
                   {categories.map((cat) => (
                     <Link
@@ -73,8 +71,6 @@ const Header = async () => {
                     </Link>
                   ))}
                 </div>
-
-                {/* Subcategories grid */}
                 <div className="flex-1 grid grid-cols-2 gap-4 p-4 max-h-72 overflow-y-auto">
                   {categories.map((cat) => (
                     cat.subCategories.length > 0 && (
@@ -85,8 +81,7 @@ const Header = async () => {
                             <Link
                               key={`${cat.category}-${sub}`}
                               href={`/search?category=${encodeURIComponent(cat.category)}&subCategory=${encodeURIComponent(sub)}`}
-                              className="text-sm text-gray-700 hover:text-black hover:underline"
-                            >
+                              className="text-sm text-gray-700 hover:text-black hover:underline">
                               {sub}
                             </Link>
                           ))}

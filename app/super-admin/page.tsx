@@ -6,6 +6,8 @@ import { getAnalyticsOverview } from '@/lib/actions/analytics.actions';
 import { convertToPlainObject } from '@/lib/utils';
 import SuperAdminDashboard from './super-admin-dashboard';
 
+export const runtime = 'nodejs';
+
 export const metadata: Metadata = {
   title: 'Super Admin',
 };

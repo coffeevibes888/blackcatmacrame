@@ -49,6 +49,18 @@ const Menu = async () => {
             <SheetTitle></SheetTitle>
             <ModeToggle />
             <NotificationBell isAdmin={isAdmin} />
+            <Button asChild variant='ghost' className='w-full justify-start'>
+              <Link href='/'>Home</Link>
+            </Button>
+            <Button asChild variant='ghost' className='w-full justify-start'>
+              <Link href='/about'>About</Link>
+            </Button>
+            <Button asChild variant='ghost' className='w-full justify-start'>
+              <Link href='/blog'>Blog</Link>
+            </Button>
+            <Button asChild variant='ghost' className='w-full justify-start'>
+              <Link href='/contact'>Contact</Link>
+            </Button>
             {isSuperAdmin && (
               <Button asChild variant='ghost' className='w-full justify-start'>
                 <Link href='/super-admin'>Monitoring</Link>
