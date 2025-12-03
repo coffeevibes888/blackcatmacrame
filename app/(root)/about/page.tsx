@@ -1,11 +1,7 @@
-import Link from 'next/link';
-
 const AboutPage = () => {
   const photos = [
-    { id: 1, label: 'Founder', src: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg' },
-    { id: 2, label: 'In the Studio', src: 'https://images.pexels.com/photos/1858477/pexels-photo-1858477.jpeg' },
-    { id: 3, label: 'Rocken My Vibe', src: 'https://images.pexels.com/photos/6311587/pexels-photo-6311587.jpeg' },
-    { id: 4, label: 'Behind the Scenes', src: 'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg' },
+    { id: 1, label: 'Founder', src: '/images/allenPic2.jpg' },
+    { id: 2, label: 'Me', src: '/images/me2.PNG' },
   ];
 
   return (
@@ -27,41 +23,34 @@ const AboutPage = () => {
             <div className="rounded-3xl border border-violet-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/70 p-6 md:p-8 shadow-[0_0_60px_rgba(124,58,237,0.35)]">
               <p className="text-xs font-semibold tracking-[0.2em] text-violet-200 uppercase mb-2">The Story</p>
               <p className="text-sm md:text-base text-gray-100 leading-relaxed">
-                Rocken My Vibe started with a simple idea: wear what you believe, laugh through the chaos, and let
-                your wardrobe remind you that God is still in control. From late-night design sessions to test prints on
-                the living room floor, this brand has always been about mixing faith, fun, and bold personality.
+                Hey, I&apos;m Allen — the creator, designer, and soul behind Rocken My Vibe. I didn&apos;t start this brand from a
+                perfect place… actually, it came from surviving some of the hardest chapters of my life. From near-death
+                experiences to spiritual awakenings, from rebuilding my faith to rebuilding my confidence — every step
+                shaped who I am and what this brand stands for.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                This isn&apos;t just merch. It&apos;s conversation-starting, smile-sparking, soul-lifting gear made for real
-                people walking through real seasons. Some days that means loud colors and big fonts. Other days, it&apos;s a
-                quiet reminder printed on your favorite hoodie.
+                I&apos;m a person who lives in two worlds at once: the spiritual one that speaks in signs, visions, and
+                synchronicities… and the everyday physical world where bills, jobs, and real-life struggles don&apos;t
+                magically disappear. Rocken My Vibe is the bridge I built between those worlds.
               </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-4 space-y-2">
-                <p className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-300">What You&apos;ll Find Here</p>
-                <p className="text-sm text-gray-200">
-                  Drops inspired by scripture, inside jokes from the faith walk, and designs that feel just as good at
-                  church as they do at the cookout.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-4 space-y-2">
-                <p className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-300">Where We&apos;re Going</p>
-                <p className="text-sm text-gray-200">
-                  More stories. More collabs. More ways to help you rock your testimony without saying a word.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-gray-300">
-              <span className="inline-flex items-center gap-2 rounded-full border border-violet-400/60 bg-violet-500/20 px-3 py-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Built with faith & fun
-              </span>
-              <Link href="/products" className="underline text-violet-300 hover:text-violet-200">
-                Browse the latest drops
-              </Link>
+              <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
+                After years of feeling like I didn&apos;t fit in, I realized something powerful: your vibe isn&apos;t supposed to
+                match the room — it&apos;s supposed to shift it. So I turned my experiences, my connection with God, my sense
+                of humor, and even my scars into something creative. I stopped hiding, stopped playing small, and decided
+                to design clothes that carry a message — sometimes bold, sometimes funny, sometimes spiritual, but always
+                real.
+              </p>
+              <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
+                This brand is for the people who&apos;ve been through things… the ones who feel energy deeply, who&apos;ve survived
+                storms, who&apos;ve seen darkness but still choose light. It&apos;s for anyone who&apos;s ever felt &quot;different&quot; in the
+                best (and hardest) ways. Rocken My Vibe is my reminder — and yours — that faith can be stylish, healing
+                can be loud, and your story is worth wearing.
+              </p>
+              <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
+                If you&apos;re here, welcome. Whether you came for the graphics, the message, or just curiosity — I&apos;m glad
+                you&apos;re part of this journey. Let&apos;s walk it together. With courage. With humor. With God. And most
+                importantly… let&apos;s rock our vibe.
+              </p>
             </div>
           </div>
 

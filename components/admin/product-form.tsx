@@ -71,7 +71,12 @@ const ProductForm = ({
   const handleOnSaleChange = (v: boolean | 'indeterminate') => {
     const checked = Boolean(v);
     form.setValue('onSale', checked);
-    if (!checked) {
+    if (checked) {
+      const currentSalePercent = form.getValues('salePercent');
+      if (currentSalePercent === undefined || Number.isNaN(currentSalePercent)) {
+        form.setValue('salePercent', 10);
+      }
+    } else {
       form.setValue('salePercent', undefined);
       form.setValue('saleUntil', null);
     }
