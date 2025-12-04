@@ -1,474 +1,355 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Send, Loader, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useRef, useState } from "react";
+import { Loader, Send, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { ChatMessage } from "@/types";
 
 interface ChatBoxProps {
   onClose?: () => void;
 }
 
-type Friend = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  phoneNumber: string | null;
-};
-
-type ThreadMessage = {
-  id: string;
-  content: string;
-  createdAt: string;
-  senderUserId: string | null;
-  senderName: string | null;
-};
-
-interface ThreadResponse {
-  thread: {
-    id: string;
-    messages: ThreadMessage[];
-  };
-}
-
 export function ChatBox({ onClose }: ChatBoxProps) {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [searchResults, setSearchResults] = useState<Friend[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [pendingFriendIds, setPendingFriendIds] = useState<string[]>([]);
-  const [activeFriend, setActiveFriend] = useState<Friend | null>(null);
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ThreadMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingFriends, setLoadingFriends] = useState(false);
-  const [loadingThread, setLoadingThread] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(200);
-  const [isResizing, setIsResizing] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Load any existing conversation from localStorage on mount
   useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        setLoadingFriends(true);
-        const res = await fetch('/api/users/friends');
-        const data = await res.json();
-        if (res.ok && Array.isArray(data.friends)) {
-          setFriends(data.friends);
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem("vibeguide-chat") : null;
+      if (raw) {
+        const parsed = JSON.parse(raw) as Array<{
+          id: string;
+          content: string;
+          sender: "user" | "ai" | "agent";
+          timestamp: string;
+          senderName?: string;
+          isTyping?: boolean;
+        }>;
+
+        const restored: ChatMessage[] = parsed.map((m) => ({
+          ...m,
+          timestamp: new Date(m.timestamp),
+        }));
+
+        if (restored.length > 0) {
+          setMessages(restored);
+          return;
         }
-      } catch {
-        // ignore errors for now
-      } finally {
-        setLoadingFriends(false);
       }
-    };
+    } catch {
+      // ignore parse/storage errors and fall back to default welcome
+    }
 
-    fetchFriends();
+    const initial: ChatMessage[] = [
+      {
+        id: "welcome",
+        content:
+          "Hey there! I'm VibeGuide, your RockEnMyVibe assistant. Tell me what you're looking for – a vibe, a product, or help with your account or order – and I'll point you in the right direction.",
+        sender: "ai",
+        timestamp: new Date(),
+        senderName: "VibeGuide",
+      },
+    ];
+    setMessages(initial);
   }, []);
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (!q) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      setSearchLoading(true);
-      const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.users)) {
-        setSearchResults(data.users);
-      } else {
-        setSearchResults([]);
-      }
-    } catch {
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const handleAddFriend = async (user: Friend) => {
-    try {
-      setPendingFriendIds((prev) => (prev.includes(user.id) ? prev : [...prev, user.id]));
-
-      const res = await fetch('/api/users/friends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: user.id }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setPendingFriendIds((prev) => prev.filter((id) => id !== user.id));
-        return;
-      }
-
-      if (data.status === 'accepted') {
-        setFriends((prev) => {
-          if (prev.some((f) => f.id === user.id)) return prev;
-          return [...prev, user];
-        });
-        setPendingFriendIds((prev) => prev.filter((id) => id !== user.id));
-      }
-      // if status is 'pending', keep it in pendingFriendIds so button shows "Sent"
-    } catch {
-      setPendingFriendIds((prev) => prev.filter((id) => id !== user.id));
-    }
-  };
-
-  const handleDeleteFriend = async (user: Friend) => {
-    try {
-      const res = await fetch('/api/users/friends', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: user.id }),
-      });
-
-      if (!res.ok) return;
-
-      setFriends((prev) => prev.filter((f) => f.id !== user.id));
-      setPendingFriendIds((prev) => prev.filter((id) => id !== user.id));
-    } catch {
-      // ignore
-    }
-  };
 
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
+  // Persist conversation to localStorage whenever messages change
   useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!isResizing || !containerRef.current) return;
-
-      const rect = containerRef.current.getBoundingClientRect();
-      const minWidth = 140;
-      const maxWidth = Math.max(180, rect.width * 0.6);
-      const newWidth = event.clientX - rect.left;
-
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
-        setSidebarWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isResizing) {
-        setIsResizing(false);
-      }
-    };
-
-    if (isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing]);
-
-  const loadThreadForFriend = async (friend: Friend) => {
-    setActiveFriend(friend);
-    setMessages([]);
-    setThreadId(null);
-
-    if (!friend.email && !friend.phoneNumber && !friend.name) return;
-
     try {
-      setLoadingThread(true);
-
-      const createRes = await fetch('/api/messages/dm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: friend.email || friend.phoneNumber || friend.name, message: '' }),
-      });
-
-      const createData = await createRes.json();
-
-      if (!createRes.ok || !createData.threadId) {
-        return;
-      }
-
-      const id = createData.threadId as string;
-      setThreadId(id);
-
-      const threadRes = await fetch(`/api/messages/threads/${id}`);
-      if (!threadRes.ok) return;
-      const threadData = (await threadRes.json()) as ThreadResponse;
-
-      const ordered = [...(threadData.thread.messages || [])].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-      setMessages(ordered);
+      if (typeof window === "undefined") return;
+      const serializable = messages.map((m) => ({
+        ...m,
+        timestamp: m.timestamp.toISOString(),
+      }));
+      window.localStorage.setItem("vibeguide-chat", JSON.stringify(serializable));
     } catch {
-      // ignore error, chat will just appear empty
-    } finally {
-      setLoadingThread(false);
+      // ignore storage errors
     }
+  }, [messages]);
+
+  const startFreshConversation = () => {
+    const initial: ChatMessage[] = [
+      {
+        id: "welcome",
+        content:
+          "Hey there! I'm VibeGuide, your RockEnMyVibe assistant. Tell me what you're looking for – a vibe, a product, or help with your account or order – and I'll point you in the right direction.",
+        sender: "ai",
+        timestamp: new Date(),
+        senderName: "VibeGuide",
+      },
+    ];
+    setMessages(initial);
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !threadId) return;
+    const trimmed = input.trim();
+    if (!trimmed) return;
 
-    const content = input.trim();
-    setInput('');
-    setIsLoading(true);
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      content: trimmed,
+      sender: "user",
+      timestamp: new Date(),
+      senderName: "You",
+    };
+
+    setInput("");
+    setMessages((prev) => [...prev, userMessage]);
+    setIsSending(true);
 
     try {
-      const res = await fetch(`/api/messages/threads/${threadId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.message) {
-        return;
-      }
-
-      const newMessage: ThreadMessage = {
-        id: data.message.id,
-        content: data.message.content,
-        createdAt: data.message.createdAt,
-        senderUserId: data.message.senderUserId,
-        senderName: data.message.senderName,
+      const typingMessage: ChatMessage = {
+        id: `typing-${Date.now()}`,
+        content: "Typing...",
+        sender: "ai",
+        timestamp: new Date(),
+        senderName: "VibeGuide",
+        isTyping: true,
       };
 
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) => [...prev, typingMessage]);
+
+      setTimeout(() => {
+        setMessages((prev) => {
+          const withoutTyping = prev.filter((m) => !m.isTyping);
+
+          const lower = trimmed.toLowerCase();
+          const now = new Date();
+          const day = now.getDay();
+          const hour = now.getHours();
+
+          const isWeekday = day >= 1 && day <= 5;
+          const isBusinessHours = hour >= 9 && hour < 18; // match ChatWidget hours
+
+          const replyTextPrefix = "I'm sorry you're having trouble with that. ";
+          let replyBody =
+            "Soon I'll be fully connected to a live agent and a deeper AI brain so I can walk you step-by-step through products, orders, and account issues.";
+
+          const isPasswordIssue =
+            lower.includes("password") ||
+            lower.includes("log in") ||
+            lower.includes("login") ||
+            lower.includes("sign in") ||
+            lower.includes("reset");
+
+          const isOrderIssue =
+            lower.includes("order") ||
+            lower.includes("tracking") ||
+            lower.includes("track my") ||
+            lower.includes("where is my") ||
+            lower.includes("package") ||
+            lower.includes("shipped") ||
+            lower.includes("delivery") ||
+            lower.includes("usps") ||
+            lower.includes("fedex") ||
+            lower.includes("ups");
+
+          const isTrackingBug =
+            lower.includes("tracking number") ||
+            lower.includes("tracking code") ||
+            lower.includes("not working") ||
+            lower.includes("wrong number");
+
+          const isSizing =
+            lower.includes("size") ||
+            lower.includes("fit") ||
+            lower.includes("sizing");
+
+          const isColor =
+            lower.includes("color") || lower.includes("colour") || lower.includes("colors");
+
+          const isShipping =
+            lower.includes("shipping") ||
+            lower.includes("ship to") ||
+            lower.includes("ship here") ||
+            lower.includes("international");
+
+          const isReturns =
+            lower.includes("return") ||
+            lower.includes("refund") ||
+            lower.includes("exchange") ||
+            lower.includes("wrong item");
+
+          if (isPasswordIssue) {
+            replyBody =
+              "For password and login issues, go to the sign-in page and click **Forgot password?**. Use the same email you used at checkout. If you don't see the reset email after a few minutes, check spam and promotions. If it still doesn't arrive, open your **Account / Profile** page and use the support/contact option there so a human can manually help you get back in.";
+          } else if (isOrderIssue) {
+            if (isBusinessHours && isWeekday) {
+              replyBody =
+                "For order help, grab your **order number** and the **email** you used at checkout. You can review your orders from your **Account / Profile** area under *Orders* and use the tracking link in your confirmation email. If something looks off, you can start a support request from your account page and a live agent will jump in as soon as possible.";
+            } else {
+              replyBody =
+                "It looks like it's currently **outside our normal live agent hours** (Mon–Fri, 9:00am–6:00pm). You can still:\n\n- View your orders from your **Account / Profile** page.\n- Use the tracking link in your confirmation email.\n- Leave us a detailed message from your account or contact page and we'll respond as soon as our team is back online.";
+            }
+
+            if (isTrackingBug) {
+              replyBody +=
+                "\n\nIf your tracking number looks wrong or isn't updating, sometimes carriers take 24–48 hours to scan packages. If it's been longer than that, include your order number and tracking code in a support message so we can check directly with the carrier.";
+            }
+          } else if (isSizing) {
+            replyBody =
+              "For sizing, start with the **size chart** on the product page. If you're between sizes or not sure, tell me your usual tee/hoodie size and how you like it to fit (snug, true to size, or oversized) and I'll point you toward the safest choice when I'm fully online.";
+          } else if (isColor) {
+            replyBody =
+              "Color options depend on the specific design and size. Check the color swatches or dropdown on the product page. If a color you want isn't selectable, it's either sold out or not available for that size right now.";
+          } else if (isShipping) {
+            replyBody =
+              "Shipping rates and locations are calculated at checkout based on your address and the items in your cart. Add your items, go to the cart, and start checkout to see live shipping options and prices. If you have a specific country or region in mind, mention it and I can tell you whether we typically ship there.";
+          } else if (isReturns) {
+            replyBody =
+              "For returns, refunds, or exchanges, keep your order number handy and make sure items are unworn and in original condition. Start a return from your **Account / Profile** page or by using the link in your order confirmation email. If something arrived damaged or totally wrong, include photos when you contact support so we can fix it fast.";
+          }
+
+          const reply: ChatMessage = {
+            id: `ai-${Date.now()}`,
+            content: replyTextPrefix + replyBody,
+            sender: "ai",
+            timestamp: new Date(),
+            senderName: "VibeGuide",
+          };
+          return [...withoutTyping, reply];
+        });
+        setIsSending(false);
+      }, 800);
     } catch {
-      // ignore error for now
-    } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
-  const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const handleEndConversation = async () => {
+    if (!messages.length) {
+      startFreshConversation();
+      return;
+    }
+
+    setIsEnding(true);
+    try {
+      // Send the current conversation to an API route so it can be stored in the DB for logging
+      void (await fetch("/api/support/chat-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }),
+      }));
+    } catch {
+      // If this fails, we still clear locally so the customer experience is consistent
+    } finally {
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("vibeguide-chat");
+        }
+      } catch {
+        // ignore
+      }
+      startFreshConversation();
+      setIsEnding(false);
+    }
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full bg-white dark:bg-slate-950 rounded-lg shadow-lg overflow-hidden text-slate-900 dark:text-slate-50 select-none"
-    >
-      {/* Friends sidebar */}
-      <aside
-        className="hidden sm:flex flex-col border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80"
-        style={{ width: sidebarWidth }}
-      >
-        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-          People
+    <div className="flex h-full flex-col bg-slate-950 text-slate-50 rounded-lg shadow-xl overflow-hidden">
+      <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 flex items-center justify-between text-xs sm:text-sm">
+        <div className="flex flex-col">
+          <span className="font-semibold tracking-wide">Need help shopping?</span>
+          <span className="text-[11px] text-violet-100/90">
+            Chat with a RockEnMyVibe assistant about products, sizing, or orders.
+          </span>
         </div>
-        <div className="px-2 pt-2 pb-1 border-b border-slate-200 dark:border-slate-800">
-          <form onSubmit={handleSearch} className="flex items-center gap-1">
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, email, or phone"
-              className="h-7 text-[11px] px-2 py-1 rounded-md dark:bg-slate-800 dark:border-slate-700"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="h-7 w-7 bg-violet-600 hover:bg-violet-700 text-white"
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-white/15 transition-colors"
+            aria-label="Close chat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-slate-950/95">
+        {messages.map((m) => {
+          const mine = m.sender === "user";
+          return (
+            <div
+              key={m.id}
+              className={`flex ${mine ? "justify-end" : "justify-start"}`}
             >
-              <span className="text-[10px]">Go</span>
-            </Button>
-          </form>
-          {searchLoading && (
-            <p className="mt-1 text-[10px] text-slate-400">Searching...</p>
-          )}
-        </div>
-        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 text-xs">
-          {loadingFriends && <p className="text-slate-400 text-[11px] px-1">Loading friends...</p>}
-          {!loadingFriends && friends.length === 0 && (
-            <p className="text-slate-400 text-[11px] px-1">No friends yet.</p>
-          )}
-          {friends.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => loadThreadForFriend(f)}
-              className={`w-full text-left rounded-lg px-2 py-1.5 border text-[11px] mb-0.5 transition-colors ${
-                activeFriend?.id === f.id
-                  ? 'border-violet-400 bg-violet-500/20 text-violet-100'
-                  : 'border-white/10 bg-slate-900/40 text-slate-200 hover:border-violet-400/60 hover:bg-slate-900/80'
-              }`}
-            >
-              <div className="font-medium truncate">{f.name || 'User'}</div>
-              {f.email && <div className="text-[10px] text-slate-400 truncate">{f.email}</div>}
-            </button>
-          ))}
-          {searchResults.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-slate-800/60">
-              <p className="text-[10px] text-slate-400 mb-1 px-1">Search results</p>
-              {searchResults.map((u) => (
-                <div
-                  key={u.id}
-                  className="w-full rounded-lg px-2 py-1.5 border border-dashed border-white/15 mb-0.5 text-[11px] bg-slate-900/40 flex flex-col gap-1"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{u.name || 'User'}</div>
-                      {u.email && (
-                        <div className="text-[10px] text-slate-400 truncate">{u.email}</div>
-                      )}
-                    </div>
-                    {friends.some((f) => f.id === u.id) ? (
-                      <Button
-                        type="button"
-                        onClick={() => handleDeleteFriend(u)}
-                        className="h-6 px-2 text-[10px] bg-slate-700 hover:bg-slate-800 text-slate-50"
-                      >
-                        Delete
-                      </Button>
-                    ) : pendingFriendIds.includes(u.id) ? (
-                      <Button
-                        type="button"
-                        disabled
-                        className="h-6 px-2 text-[10px] bg-slate-600 text-slate-100 cursor-default"
-                      >
-                        Sent
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        onClick={() => handleAddFriend(u)}
-                        className="h-6 px-2 text-[10px] bg-violet-600 hover:bg-violet-700 text-white"
-                      >
-                        Add
-                      </Button>
-                    )}
-                  </div>
-                  {u.phoneNumber && (
-                    <div className="text-[10px] text-slate-500 truncate">{u.phoneNumber}</div>
+              <div
+                className={`max-w-[80%] rounded-2xl px-3 py-2 text-[11px] sm:text-[13px] shadow border border-white/5 ${
+                  mine
+                    ? "ml-auto bg-violet-600 text-slate-50"
+                    : "mr-auto bg-slate-800 text-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-100/80">
+                    {mine ? "You" : m.senderName || "Assistant"}
+                  </span>
+                  {!m.isTyping && (
+                    <span className="text-[9px] text-slate-300/80">
+                      {m.timestamp.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </aside>
-
-      {/* Resize handle */}
-      <div
-        className="hidden sm:block w-1 cursor-col-resize bg-transparent hover:bg-violet-500/40"
-        onMouseDown={() => setIsResizing(true)}
-      />
-
-      {/* Chat area */}
-      <div className="flex flex-1 flex-col select-text">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-violet-700 to-blue-700 text-white px-3 py-2 flex items-center justify-between text-xs md:text-sm">
-          <div className="flex flex-col">
-            <span className="font-semibold">
-              {activeFriend ? activeFriend.name || activeFriend.email || 'Conversation' : 'Direct Messages'}
-            </span>
-            <span className="text-[11px] text-violet-100/90">
-              {activeFriend
-                ? 'Private chat — minimized like an office messenger'
-                : 'Pick someone on the left to start chatting'}
-            </span>
-          </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-white/15 rounded transition-colors"
-              aria-label="Close chat"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-slate-50 dark:bg-slate-900">
-          {!activeFriend && (
-            <div className="flex h-full items-center justify-center text-center text-[12px] text-slate-500 dark:text-slate-400 px-4">
-              <div>
-                <p className="mb-1 font-medium">Welcome to RockEnMyVibe Messenger</p>
-                <p>Select a friend or coworker on the left to start a private chat.</p>
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {m.isTyping ? "Typing…" : m.content}
+                </p>
               </div>
             </div>
-          )}
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
 
-          {activeFriend && loadingThread && (
-            <p className="text-[11px] text-slate-400">Loading conversation...</p>
-          )}
-
-          {activeFriend && !loadingThread && messages.length === 0 && (
-            <p className="text-[11px] text-slate-400">Say hi to start this conversation.</p>
-          )}
-
-          {messages.map((m) => {
-            const mine = false; // we don't know current user id on client here; treat all as neutral for now
-            return (
-              <div
-                key={m.id}
-                className={`flex ${mine ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-[11px] md:text-[13px] shadow border border-white/5 ${
-                    mine ? 'ml-auto bg-violet-600/80 text-slate-50' : 'mr-auto bg-slate-800/80 text-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-100/80">
-                      {mine ? 'You' : m.senderName || activeFriend?.name || 'Other'}
-                    </span>
-                    <span className="text-[9px] text-slate-200/70">{formatTime(m.createdAt)}</span>
-                  </div>
-                  <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2">
-          <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder={activeFriend ? 'Type a message... (Enter to send)' : 'Select someone first'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading || !activeFriend || !threadId}
-              className="flex-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 dark:bg-slate-800 dark:text-white dark:border-slate-700 text-xs md:text-sm"
-            />
-            <Button
-              type="submit"
-              disabled={isLoading || !input.trim() || !activeFriend || !threadId}
-              className="bg-violet-600 hover:bg-violet-700 dark:bg-violet-700 dark:hover:bg-violet-800 text-white rounded-lg px-3 py-2 flex items-center gap-1 text-xs md:text-sm"
-            >
-              {isLoading ? (
-                <Loader className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">Send</span>
-            </Button>
-          </form>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-            This chat can be minimized at any time  perfect for office or movie mode.
+      <div className="border-t border-slate-800 bg-slate-950 px-3 py-2">
+        <form onSubmit={handleSend} className="flex items-end gap-2">
+          <Input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about a product, order, or sizing..."
+            className="flex-1 rounded-lg bg-slate-900 border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            disabled={isSending || isEnding}
+          />
+          <Button
+            type="submit"
+            disabled={!input.trim() || isSending || isEnding}
+            className="bg-violet-600 hover:bg-violet-700 text-white rounded-lg px-3 py-2 flex items-center gap-1 text-xs sm:text-sm"
+          >
+            {isSending ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">Send</span>
+          </Button>
+        </form>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="text-[10px] text-slate-500">
+            Soon this will connect you directly with a live agent or AI shopping guide.
           </p>
+          <button
+            type="button"
+            onClick={handleEndConversation}
+            disabled={isEnding}
+            className="text-[10px] text-violet-300 hover:text-violet-100 underline-offset-2 hover:underline disabled:opacity-60"
+          >
+            {isEnding ? "Ending..." : "End Conversation"}
+          </button>
         </div>
       </div>
     </div>

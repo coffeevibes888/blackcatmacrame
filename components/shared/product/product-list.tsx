@@ -70,53 +70,68 @@ const ProductList = ({
       )}
 
       <div className="relative mx-auto max-w-7xl px-4">
-        {/* LEFT ARROW */}
-        <button
-          onClick={scrollLeft}
-          className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 
+        {shownData.length > 4 ? (
+          <>
+            {/* LEFT ARROW */}
+            <button
+              onClick={scrollLeft}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 
                     flex h-12 w-12 items-center justify-center 
                     bg-black/80 text-white rounded-full 
                     hover:bg-black transition-all duration-200
                     ${!showLeftArrow ? 'opacity-0 pointer-events-none' : 'opacity-100'}
                     shadow-lg`}
-          aria-label="Scroll left"
-        >
-          <ChevronLeft size={30} />
-        </button>
-
-        {/* SCROLL ROW */}
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto scroll-smooth no-scrollbar gap-6 py-4 px-2"
-          style={{
-            scrollBehavior: 'smooth',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        >
-          {shownData.map((product) => (
-            <div
-              key={product.slug}
-              className="flex-shrink-0 w-[250px] transition-transform duration-200 hover:scale-105"
+              aria-label="Scroll left"
             >
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
+              <ChevronLeft size={30} />
+            </button>
 
-        {/* RIGHT ARROW */}
-        <button
-          onClick={scrollRight}
-          className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 
+            {/* SCROLL ROW */}
+            <div
+              ref={scrollRef}
+              className="flex overflow-x-auto scroll-smooth no-scrollbar gap-6 py-4 px-2"
+              style={{
+                scrollBehavior: 'smooth',
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
+              }}
+            >
+              {shownData.map((product) => (
+                <div
+                  key={product.slug}
+                  className="flex-shrink-0 w-[250px] transition-transform duration-200 hover:scale-105"
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+
+            {/* RIGHT ARROW */}
+            <button
+              onClick={scrollRight}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 
                     flex h-12 w-12 items-center justify-center 
                     bg-black/80 text-white rounded-full 
                     hover:bg-black transition-all duration-200
                     ${!showRightArrow ? 'opacity-0 pointer-events-none' : 'opacity-100'}
                     shadow-lg`}
-          aria-label="Scroll right"
-        >
-          <ChevronRight size={30} />
-        </button>
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={30} />
+            </button>
+          </>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-6 py-4 px-2">
+            {shownData.map((product) => (
+              <div
+                key={product.slug}
+                className="w-[250px] transition-transform duration-200 hover:scale-105"
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

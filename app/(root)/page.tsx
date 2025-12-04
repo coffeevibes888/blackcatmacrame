@@ -40,7 +40,7 @@ const normalizeProducts = (products: RawProduct[]): Product[] =>
   });
 
 const Homepage = async () => {
-  const latestProductsRaw = await getLatestProducts();
+  const latestProductsRaw = await getLatestProducts(20);
   const featuredProductsRaw = await getFeaturedProducts();
 
   // Themed sections: make sure your products use these category names (e.g. "Faith", "Funny", "Deals", "Christmas")
