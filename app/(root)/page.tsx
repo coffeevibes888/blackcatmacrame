@@ -44,11 +44,13 @@ const Homepage = async () => {
   const funnyProductsRaw = await getLatestProductsByCategory('Funny', 20);
   const dealsProductsRaw = await getLatestProductsByCategory('Deals', 20);
   const christmasProductsRaw = await getLatestProductsByCategory('Christmas', 20);
+  const firstProductsRaw = await getLatestProductsByCategory('first', 20);
 
   const faithBasedProducts = normalizeProducts(faithBasedProductsRaw);
   const funnyProducts = normalizeProducts(funnyProductsRaw);
   const dealsProducts = normalizeProducts(dealsProductsRaw);
   const christmasProducts = normalizeProducts(christmasProductsRaw);
+  const firstProducts = normalizeProducts(firstProductsRaw);
 
   return (
     <>
@@ -75,6 +77,10 @@ const Homepage = async () => {
 
       {christmasProducts.length > 0 && (
         <ProductList data={christmasProducts} title='Holiday & Christmas' />
+      )}
+
+      {firstProducts.length > 0 && (
+        <ProductList data={firstProducts} title='Military & First Responders' />
       )}
 
       <ViewAllProductsButton />
