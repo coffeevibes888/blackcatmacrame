@@ -69,6 +69,9 @@ const Homepage = async () => {
       {dealsProducts.length > 0 && (
         <ProductList data={dealsProducts} title="Positive Vibes" />
       )}
+      {firstProducts.length > 0 && (
+        <ProductList data={firstProducts} title='Military & First Responders' />
+      )}
 
       {funnyProducts.length > 0 && (
         <ProductList data={funnyProducts} title='Funny & Bold' />
@@ -79,9 +82,6 @@ const Homepage = async () => {
         <ProductList data={christmasProducts} title='Holiday & Christmas' />
       )}
 
-      {firstProducts.length > 0 && (
-        <ProductList data={firstProducts} title='Military & First Responders' />
-      )}
 
       <ViewAllProductsButton />
 
