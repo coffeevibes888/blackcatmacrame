@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
@@ -137,10 +138,12 @@ const DealCountdown = () => {
                   <CarouselItem key={photo.id} className='h-full'>
                     <div className='relative h-full rounded-2xl border border-white/15 overflow-hidden bg-slate-900/80 shadow-[0_18px_45px_rgba(15,23,42,0.85)]'>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={photo.src}
                         alt={photo.label}
-                        className='h-full w-full object-cover'
+                        fill
+                        sizes='(min-width: 768px) 565px, 100vw'
+                        className='object-cover'
                       />
                       <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-2 pt-4 text-[11px] text-gray-100 flex items-center justify-between'>
                         <span className='uppercase tracking-[0.15em] text-gray-300'>{photo.label}</span>
@@ -179,10 +182,12 @@ const DealCountdown = () => {
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={photo.src}
                     alt={photo.label}
-                    className='h-full w-full object-cover'
+                    fill
+                    sizes='(min-width: 1024px) 565px, (min-width: 768px) 480px, 80vw'
+                    className='object-cover'
                   />
                   <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-2 pt-4 text-[11px] text-gray-100 flex items-center justify-between'>
                     <span className='uppercase tracking-[0.15em] text-gray-300'>{photo.label}</span>

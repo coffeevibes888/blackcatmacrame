@@ -125,7 +125,12 @@ export default function NotificationBell({ isAdmin }: { isAdmin: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='relative'>
+        <Button
+          variant='ghost'
+          size='icon'
+          aria-label={totalCount > 0 ? `You have ${totalCount} notifications` : 'Open notifications'}
+          className='relative'
+        >
           <div className='relative'>
             <Bell className='h-5 w-5' />
             {totalCount > 0 && (

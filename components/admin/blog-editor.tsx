@@ -139,6 +139,7 @@ export default function BlogEditor() {
               type="button"
               className="p-1 rounded hover:bg-slate-800 text-slate-200"
               onClick={() => handleToolbarClick('bold')}
+              aria-label="Bold"
             >
               <Bold className="w-4 h-4" />
             </button>
@@ -146,6 +147,7 @@ export default function BlogEditor() {
               type="button"
               className="p-1 rounded hover:bg-slate-800 text-slate-200"
               onClick={() => handleToolbarClick('italic')}
+              aria-label="Italic"
             >
               <Italic className="w-4 h-4" />
             </button>
@@ -171,6 +173,7 @@ export default function BlogEditor() {
               type="button"
               className="p-1 rounded hover:bg-slate-800 text-slate-200 flex items-center gap-1"
               onClick={() => setShowEmojiPicker((v) => !v)}
+              aria-label="Toggle emoji picker"
             >
               <SmilePlus className="w-4 h-4" />
               <span className="text-[11px] hidden sm:inline">Emoji</span>

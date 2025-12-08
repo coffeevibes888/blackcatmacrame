@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react';
 
 export default function Hero() {
   return (
-    <div className="relative w-full h-[600px] overflow-visible flex items-center justify-center bg-transparent">
-      <div className="w-full max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-start gap-10 h-full pt-10 pb-10 ml-4">
+    <div className="relative w-full min-h-[480px] md:h-[600px] overflow-visible flex items-center justify-center bg-transparent">
+      <div className="w-full max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-start gap-8 md:gap-10 h-full pt-10 pb-10 md:ml-4">
         <div className="flex-1 flex flex-col items-center md:items-start gap-6 mt-0">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -110,6 +110,8 @@ function Product3DRotator() {
                 src={product.src}
                 alt={product.alt}
                 fill
+                priority={i === 0}
+                sizes="(min-width: 1024px) 480px, (min-width: 768px) 400px, 80vw"
                 className="object-contain drop-shadow-xl select-none"
               />
             </motion.div>
@@ -118,12 +120,16 @@ function Product3DRotator() {
       })}
 
       {/* Apple-style dots */}
-      <div className="absolute bottom-2 flex gap-2 z-20">
+      <div className="absolute bottom-3 flex gap-3 z-20">
         {products.map((_, i) => (
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-1.5 rounded-full transition-all ${index === i ? 'w-6 bg-black' : 'w-2 bg-gray-300'}`}
+            type="button"
+            aria-label={`Show product ${i + 1}`}
+            className={`min-h-[28px] min-w-[28px] rounded-full border border-black/20 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/90 focus-visible:ring-offset-slate-900 ${
+              index === i ? 'bg-black' : 'bg-gray-300/80'
+            }`}
           />
         ))}
       </div>
