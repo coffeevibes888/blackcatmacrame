@@ -42,13 +42,13 @@ const Homepage = async () => {
   // Themed sections: make sure your products use these category names (e.g. "Faith", "Funny", "Deals", "Christmas")
   const faithBasedProductsRaw = await getLatestProductsByCategory('Faith', 20);
   const funnyProductsRaw = await getLatestProductsByCategory('Funny', 20);
-  const dealsProductsRaw = await getLatestProductsByCategory('Deals', 20);
+  const positiveProductsRaw = await getLatestProductsByCategory('Positive', 20);
   const christmasProductsRaw = await getLatestProductsByCategory('Christmas', 20);
-  const firstProductsRaw = await getLatestProductsByCategory('first', 20);
+  const firstProductsRaw = await getLatestProductsByCategory('First', 20);
 
   const faithBasedProducts = normalizeProducts(faithBasedProductsRaw);
   const funnyProducts = normalizeProducts(funnyProductsRaw);
-  const dealsProducts = normalizeProducts(dealsProductsRaw);
+  const positiveProducts = normalizeProducts(positiveProductsRaw);
   const christmasProducts = normalizeProducts(christmasProductsRaw);
   const firstProducts = normalizeProducts(firstProductsRaw);
 
@@ -66,8 +66,8 @@ const Homepage = async () => {
       {faithBasedProducts.length > 0 && (
         <ProductList data={faithBasedProducts} title='Faith Based Vibes' />
       )}
-      {dealsProducts.length > 0 && (
-        <ProductList data={dealsProducts} title="Positive Vibes" />
+      {positiveProducts.length > 0 && (
+        <ProductList data={positiveProducts} title="Positive Vibes" />
       )}
       {firstProducts.length > 0 && (
         <ProductList data={firstProducts} title='Military & First Responders' />
