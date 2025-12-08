@@ -56,6 +56,7 @@ export const productDefaultValues = {
   onSale: false,
   salePercent: undefined as number | undefined,
   saleUntil: null as string | null,
+  saleDiscountType: 'percentage' as 'percentage' | 'amount',
 };
 
 export const USER_ROLES = process.env.USER_ROLES

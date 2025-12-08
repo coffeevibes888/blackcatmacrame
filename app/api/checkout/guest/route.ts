@@ -4,6 +4,9 @@ import { getMyCart } from "@/lib/actions/cart.actions";
 import { insertOrderItemSchema, shippingAddressSchema } from "@/lib/validators";
 import { formatError } from "@/lib/utils";
 
+// DEPRECATED: This route creates orders before payment.
+// Use /api/checkout/create-payment-intent instead.
+// Orders are now created via Stripe webhook after payment confirmation.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

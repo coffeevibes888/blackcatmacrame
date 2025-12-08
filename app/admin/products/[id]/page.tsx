@@ -30,6 +30,9 @@ const AdminProductUpdatePage = async (props: {
         ? Number(product.salePercent as unknown as number | string)
         : undefined,
     saleUntil: product.saleUntil ? product.saleUntil.toISOString() : null,
+    // Prisma type for product from getProductById may not include this field,
+    // so we provide a safe default that matches the Product type.
+    saleDiscountType: 'percentage',
   };
 
   return (

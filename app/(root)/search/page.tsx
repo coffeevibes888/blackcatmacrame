@@ -249,6 +249,8 @@ const SearchPage = async (props: {
               saleUntil: product.saleUntil
                 ? product.saleUntil.toISOString()
                 : undefined,
+              // search API result type doesn't expose saleDiscountType, so default here
+              saleDiscountType: 'percentage',
             };
 
             return (

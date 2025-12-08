@@ -451,11 +451,37 @@ model AnalyticsEvent {
   region        String?
   city          String?
   userAgent     String?
+  ip            String?
+  
+  // Enhanced tracking fields
+  eventType     String?  // 'pageview', 'click', 'scroll', 'exit', etc.
+  eventData     Json?    @db.Json // Flexible field for event-specific data
+  
+  // User behavior
+  timeOnPage    Int?     // Seconds spent on page
+  scrollDepth   Int?     // Percentage scrolled (0-100)
+  
+  // Device & technical
+  screenWidth   Int?
+  screenHeight  Int?
+  deviceType    String?  // 'mobile', 'tablet', 'desktop'
+  browserLang   String?  // Browser language preference
+  
+  // Marketing attribution
+  utmSource     String?  // UTM source parameter
+  utmMedium     String?  // UTM medium parameter  
+  utmCampaign   String?  // UTM campaign parameter
+  utmContent    String?  // UTM content parameter
+  utmTerm       String?  // UTM term parameter
+  
   createdAt     DateTime @default(now()) @db.Timestamp(6)
+  
   @@index([sessionCartId])
   @@index([userId])
   @@index([path])
   @@index([createdAt])
+  @@index([eventType])
+  @@index([ip])
 }
 
 model SupportStatus {
@@ -463,4 +489,85 @@ model SupportStatus {
   isOnline  Boolean  @default(true)
   updatedBy String?  @db.Uuid
   updatedAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+model BlockedIp {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ip        String   @unique
+  reason    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  createdBy String?  @db.Uuid
+}
+
+// Product interaction tracking
+model ProductView {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId     String   @db.Uuid
+  sessionCartId String
+  userId        String?  @db.Uuid
+  ip            String?
+  country       String?
+  duration      Int?     // Seconds spent viewing product
+  variantViewed String?  // Which variant/color/size
+  fromPage      String?  // Referrer page
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([productId])
+  @@index([sessionCartId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Cart abandonment and events
+model CartEvent {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionCartId String
+  userId        String?  @db.Uuid
+  eventType     String   // 'add', 'remove', 'update_qty', 'abandon', 'checkout_started'
+  productId     String?  @db.Uuid
+  variantId     String?  @db.Uuid
+  quantity      Int?
+  price         Decimal? @db.Decimal(12, 2)
+  ip            String?
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([sessionCartId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+// Search tracking for product discovery
+model SearchQuery {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionCartId String
+  userId        String?  @db.Uuid
+  query         String
+  resultsCount  Int?     // How many results returned
+  clickedResult String?  // Which product they clicked
+  ip            String?
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([sessionCartId])
+  @@index([userId])
+  @@index([query])
+  @@index([createdAt])
+}
+
+// Failed login attempts for security
+model SecurityEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventType  String   // 'failed_login', 'suspicious_activity', 'bot_detected'
+  ip         String
+  email      String?
+  userAgent  String?
+  country    String?
+  details    Json?    @db.Json
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([ip])
+  @@index([eventType])
+  @@index([createdAt])
 }

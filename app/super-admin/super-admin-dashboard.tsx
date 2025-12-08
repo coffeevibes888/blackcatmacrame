@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
@@ -26,6 +27,13 @@ const views = [
   { id: "traffic", label: "Traffic" },
   { id: "engagement", label: "Engagement" },
   { id: "users", label: "Users & Sessions" },
+  { id: "behavior", label: "User Behavior" },
+  { id: "products", label: "Product Analytics" },
+  { id: "cart", label: "Cart & Checkout" },
+  { id: "search", label: "Search Analytics" },
+  { id: "device", label: "Device & Technical" },
+  { id: "security", label: "Security & Fraud" },
+  { id: "marketing", label: "Marketing Attribution" },
 ] as const;
 
 type TopPage = {
@@ -51,6 +59,7 @@ type AnalyticsEvent = {
   region?: string | null;
   city?: string | null;
   userAgent?: string | null;
+  ip?: string | null;
 };
 
 type DevicesBreakdown = {
@@ -95,11 +104,27 @@ type StoreSummary = OverviewSummary & {
   latestSales: LatestSale[];
 };
 
+type BlockedIpSummary = {
+  id: string;
+  ip: string;
+  reason?: string | null;
+  active: boolean;
+  createdAt: Date | string;
+};
+
 interface SuperAdminDashboardProps {
   userEmail: string;
   summary: StoreSummary;
   analytics: AnalyticsSummary;
   currentUser?: Session["user"];
+  blockedIps?: BlockedIpSummary[];
+  behaviorMetrics?: any;
+  productAnalytics?: any[];
+  cartAnalytics?: any;
+  searchAnalytics?: any;
+  deviceAnalytics?: any;
+  securityMetrics?: any;
+  marketingAttribution?: any;
 }
 
 function formatDuration(ms: number) {
@@ -126,9 +151,23 @@ function parseOS(userAgent?: string | null): string {
   return "Other";
 }
 
-const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: SuperAdminDashboardProps) => {
+const SuperAdminDashboard = ({ 
+  userEmail, 
+  summary, 
+  analytics, 
+  currentUser, 
+  blockedIps,
+  behaviorMetrics,
+  productAnalytics,
+  cartAnalytics,
+  searchAnalytics,
+  deviceAnalytics,
+  securityMetrics,
+  marketingAttribution,
+}: SuperAdminDashboardProps) => {
   const [activeView, setActiveView] = useState<(typeof views)[number]["id"]>("overview");
   const [isClearingStats, startClearingStats] = useTransition();
+  const [isBlockingIp, startBlockingIp] = useTransition();
   const [activeTrafficDetail, setActiveTrafficDetail] = useState<
     "today" | "yesterday" | "last7" | null
   >(null);
@@ -218,6 +257,8 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: Sup
   const suspiciousSessions = Array.from(suspiciousSessionsMap.entries())
     .filter(([, count]) => count >= 20)
     .slice(0, 5);
+
+  const activeBlockedIps = (blockedIps || []).filter((ip) => ip.active);
 
   const overviewContent = (
     <div className="space-y-10">
@@ -587,72 +628,81 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: Sup
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold tracking-tight">Recent Activity</h2>
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-x-auto">
-            <Table>
-              <TableHeader>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight">Recent Activity</h2>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Session</TableHead>
+                <TableHead>Path</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>OS</TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentEvents.length === 0 && (
                 <TableRow>
-                  <TableHead>When</TableHead>
-                  <TableHead>Session</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>OS</TableHead>
+                  <TableCell colSpan={7} className="text-sm text-muted-foreground">
+                    No recent activity yet.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentEvents.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-sm text-muted-foreground">
-                      No recent activity yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {recentEvents.map((ev: AnalyticsEvent) => (
-                  <TableRow key={ev.id}>
-                    <TableCell>{formatDateTime(new Date(ev.createdAt)).dateTime}</TableCell>
-                    <TableCell className="text-xs font-mono truncate max-w-[140px]">
-                      {ev.sessionCartId}
-                    </TableCell>
-                    <TableCell>{ev.path}</TableCell>
-                    <TableCell>
-                      {[
-                        ev.city || undefined,
-                        ev.region || undefined,
-                        ev.country || undefined,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "Unknown"}
-                    </TableCell>
-                    <TableCell>{parseOS(ev.userAgent)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold tracking-tight">Suspicious Activity (Heuristic)</h2>
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-2 text-sm">
-            {suspiciousSessions.length === 0 && (
-              <p className="text-muted-foreground">No obvious suspicious sessions detected recently.</p>
-            )}
-            {suspiciousSessions.map(([sessionId, count]) => (
-              <div key={sessionId} className="flex items-center justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-mono text-xs truncate">{sessionId}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {count} page views in the recent window (possible bot or scraping).
-                  </p>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-destructive">
-                  Flagged
-                </span>
-              </div>
-            ))}
-          </div>
+              )}
+              {recentEvents.map((ev: AnalyticsEvent) => (
+                <TableRow key={ev.id}>
+                  <TableCell>{formatDateTime(new Date(ev.createdAt)).dateTime}</TableCell>
+                  <TableCell className="text-xs font-mono truncate max-w-[140px]">
+                    {ev.sessionCartId}
+                  </TableCell>
+                  <TableCell>{ev.path}</TableCell>
+                  <TableCell>
+                    {[
+                      ev.city || undefined,
+                      ev.region || undefined,
+                      ev.country || undefined,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "Unknown"}
+                  </TableCell>
+                  <TableCell>{parseOS(ev.userAgent)}</TableCell>
+                  <TableCell className="text-xs font-mono truncate max-w-[120px]">
+                    {ev.ip || "Unknown"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button
+                      type="button"
+                      disabled={!ev.ip || isBlockingIp}
+                      onClick={() => {
+                        if (!ev.ip) return;
+                        startBlockingIp(async () => {
+                          try {
+                            const res = await fetch("/api/super-admin/block-ip", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ ip: ev.ip, reason: `Blocked from Recent Activity for ${ev.path}` }),
+                            });
+                            if (!res.ok) {
+                              console.error("Failed to block IP", await res.text());
+                            } else {
+                              window.location.reload();
+                            }
+                          } catch (err) {
+                            console.error("Error blocking IP from dashboard", err);
+                          }
+                        });
+                      }}
+                      className="inline-flex items-center rounded-md bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isBlockingIp ? "Blocking..." : "Block IP"}
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </section>
     </div>
@@ -745,10 +795,400 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: Sup
     </div>
   );
 
+  // User Behavior Content
+  const behaviorContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">User Behavior Analytics</h2>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Avg Time on Page</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {(behaviorMetrics?.avgTimeOnPage as number) || 0}s
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Avg Pages/Session</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {((behaviorMetrics?.avgPagesPerSession as number) || 0).toFixed?.(1) || 0}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Scroll Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Users scrolling to various depths
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Exit Pages</CardTitle>
+          <CardDescription>Where users leave your site</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Page</TableHead>
+                <TableHead className="text-right">Exits</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(behaviorMetrics?.topExitPages as any[])?.map((page: any, i: number) => (
+                <TableRow key={i}>
+                  <TableCell className="font-mono text-xs">{page.path}</TableCell>
+                  <TableCell className="text-right">{page._count}</TableCell>
+                </TableRow>
+              )) || <TableRow><TableCell colSpan={2}>No data</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Product Analytics Content
+  const productsContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Product Analytics</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Viewed Products (Last 7 Days)</CardTitle>
+          <CardDescription>Most popular products and engagement</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead className="text-right">Views</TableHead>
+                <TableHead className="text-right">Avg Duration</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {productAnalytics && productAnalytics.length > 0 ? (
+                productAnalytics.map((product: any) => (
+                  <TableRow key={product.productId}>
+                    <TableCell>
+                      <Link href={`/product/${product.slug}`} className="hover:underline">
+                        {product.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">{product.views}</TableCell>
+                    <TableCell className="text-right">{product.avgDuration}s</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={3}>No product data</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Cart Analytics Content
+  const cartContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Cart & Checkout Analytics</h2>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Checkouts Started</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              {(cartAnalytics?.checkoutStarted as number) || 0}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cart Events</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {(cartAnalytics?.eventBreakdown as any[])?.map((event: any) => (
+                <div key={event.eventType} className="flex justify-between">
+                  <span className="capitalize">{event.eventType}</span>
+                  <span className="font-bold">{event._count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Search Analytics Content
+  const searchContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Search Analytics</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Searches</CardTitle>
+            <CardDescription>What users are looking for</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Query</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Avg Results</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(searchAnalytics?.topSearches as any[])?.slice(0, 10).map((search: any, i: number) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-mono text-xs">{search.query}</TableCell>
+                    <TableCell className="text-right">{search._count}</TableCell>
+                    <TableCell className="text-right">{Math.round(search._avg.resultsCount || 0)}</TableCell>
+                  </TableRow>
+                )) || <TableRow><TableCell colSpan={3}>No search data</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Zero Result Searches</CardTitle>
+            <CardDescription>Queries that found nothing</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Query</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(searchAnalytics?.zeroResultSearches as any[])?.map((search: any, i: number) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-mono text-xs">{search.query}</TableCell>
+                    <TableCell className="text-right">{search._count}</TableCell>
+                  </TableRow>
+                )) || <TableRow><TableCell colSpan={2}>No data</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Device Analytics Content
+  const deviceContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Device & Technical Analytics</h2>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Device Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {(deviceAnalytics?.deviceBreakdown as any[])?.map((device: any) => (
+                <div key={device.deviceType} className="flex justify-between">
+                  <span className="capitalize">{device.deviceType || 'Unknown'}</span>
+                  <span className="font-bold">{device._count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Screen Resolutions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {(deviceAnalytics?.screenResolutions as any[])?.slice(0, 5).map((res: any, i: number) => (
+                <div key={i} className="flex justify-between">
+                  <span className="font-mono text-xs">{res.screenWidth} x {res.screenHeight}</span>
+                  <span className="font-bold">{res._count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Browser Languages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {(deviceAnalytics?.browserLanguages as any[])?.slice(0, 5).map((lang: any) => (
+                <div key={lang.browserLang} className="flex justify-between">
+                  <span>{lang.browserLang}</span>
+                  <span className="font-bold">{lang._count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Security Content
+  const securityContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Security & Fraud Detection</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Security Events (Last 7 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {(securityMetrics?.eventBreakdown as any[])?.map((event: any) => (
+                <div key={event.eventType} className="flex justify-between items-center p-2 border rounded">
+                  <span className="font-medium capitalize">{event.eventType.replace(/_/g, ' ')}</span>
+                  <span className="text-xl font-bold">{event._count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Suspicious IPs</CardTitle>
+            <CardDescription>IPs with multiple security events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead className="text-right">Events</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(securityMetrics?.suspiciousIPs as any[])?.map((ip: any) => (
+                  <TableRow key={ip.ip}>
+                    <TableCell className="font-mono text-xs">{ip.ip}</TableCell>
+                    <TableCell className="text-right">{ip._count}</TableCell>
+                  </TableRow>
+                )) || <TableRow><TableCell colSpan={2}>No suspicious IPs</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Marketing Attribution Content
+  const marketingContent = (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Marketing Attribution</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>UTM Sources (Last 30 Days)</CardTitle>
+            <CardDescription>Where your traffic comes from</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead className="text-right">Visits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(marketingAttribution?.utmSources as any[])?.map((source: any) => (
+                  <TableRow key={source.utmSource}>
+                    <TableCell className="font-medium">{source.utmSource}</TableCell>
+                    <TableCell className="text-right">{source._count}</TableCell>
+                  </TableRow>
+                )) || <TableRow><TableCell colSpan={2}>No UTM data</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Campaigns</CardTitle>
+            <CardDescription>Best performing campaigns</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Medium</TableHead>
+                  <TableHead className="text-right">Visits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(marketingAttribution?.utmCampaigns as any[])?.slice(0, 10).map((campaign: any, i: number) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-xs">{campaign.utmCampaign}</TableCell>
+                    <TableCell className="text-xs">{campaign.utmMedium}</TableCell>
+                    <TableCell className="text-right">{campaign._count}</TableCell>
+                  </TableRow>
+                )) || <TableRow><TableCell colSpan={3}>No campaign data</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Referrers</CardTitle>
+          <CardDescription>External sites driving traffic</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Referrer</TableHead>
+                <TableHead className="text-right">Visits</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(marketingAttribution?.topReferrers as any[])?.slice(0, 15).map((ref: any, i: number) => (
+                <TableRow key={i}>
+                  <TableCell className="font-mono text-xs truncate max-w-md">{ref.referrer}</TableCell>
+                  <TableCell className="text-right">{ref._count}</TableCell>
+                </TableRow>
+              )) || <TableRow><TableCell colSpan={2}>No referrer data</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   let content = overviewContent;
   if (activeView === "traffic") content = trafficContent;
   else if (activeView === "engagement") content = engagementContent;
   else if (activeView === "users") content = usersContent;
+  else if (activeView === "behavior") content = behaviorContent;
+  else if (activeView === "products") content = productsContent;
+  else if (activeView === "cart") content = cartContent;
+  else if (activeView === "search") content = searchContent;
+  else if (activeView === "device") content = deviceContent;
+  else if (activeView === "security") content = securityContent;
+  else if (activeView === "marketing") content = marketingContent;
 
   return (
     <div className="flex gap-6">
@@ -767,6 +1207,54 @@ const SuperAdminDashboard = ({ userEmail, summary, analytics, currentUser }: Sup
             >
               {isClearingStats ? "Clearing statistics..." : "Clear All Statistics"}
             </button>
+          </CardContent>
+        </Card>
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Security & Monitoring</CardTitle>
+            <CardDescription className="text-xs">
+              Watch for scraping, bots, and blocked IPs.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4 space-y-3 text-xs">
+            <div>
+              <p className="mb-1 font-medium">Suspicious Sessions</p>
+              {suspiciousSessions.length === 0 && (
+                <p className="text-muted-foreground">No obvious suspicious sessions.</p>
+              )}
+              {suspiciousSessions.length > 0 && (
+                <ul className="space-y-1">
+                  {suspiciousSessions.slice(0, 5).map(([sessionId, count]) => (
+                    <li key={sessionId} className="flex flex-col">
+                      <span className="font-mono text-[10px] truncate">{sessionId}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {count} page views in recent window
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <p className="mb-1 font-medium">Blocked IPs</p>
+              {activeBlockedIps.length === 0 && (
+                <p className="text-muted-foreground">No active blocked IPs.</p>
+              )}
+              {activeBlockedIps.length > 0 && (
+                <ul className="space-y-1 max-h-32 overflow-y-auto">
+                  {activeBlockedIps.slice(0, 8).map((ip) => (
+                    <li key={ip.id} className="flex flex-col">
+                      <span className="font-mono text-[10px] truncate">{ip.ip}</span>
+                      {ip.reason && (
+                        <span className="text-[10px] text-muted-foreground truncate">
+                          {ip.reason}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </CardContent>
         </Card>
         <nav className="flex flex-col gap-1">

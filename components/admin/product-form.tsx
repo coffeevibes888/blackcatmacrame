@@ -67,18 +67,23 @@ const ProductForm = ({
   const isFeatured = form.watch('isFeatured');
   const banner = form.watch('banner');
   const [sizes, setSizes] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const saleDiscountType = form.watch('saleDiscountType') ?? 'percentage';
 
   const handleOnSaleChange = (v: boolean | 'indeterminate') => {
     const checked = Boolean(v);
-    form.setValue('onSale', checked);
+    form.setValue('onSale', checked, { shouldValidate: true });
     if (checked) {
       const currentSalePercent = form.getValues('salePercent');
       if (currentSalePercent === undefined || Number.isNaN(currentSalePercent)) {
-        form.setValue('salePercent', 10);
+        form.setValue('salePercent', 10, { shouldValidate: true });
+      }
+      const currentType = form.getValues('saleDiscountType');
+      if (!currentType) {
+        form.setValue('saleDiscountType', 'percentage', { shouldValidate: true });
       }
     } else {
-      form.setValue('salePercent', undefined);
-      form.setValue('saleUntil', null);
+      form.setValue('salePercent', undefined, { shouldValidate: true });
+      form.setValue('saleUntil', null, { shouldValidate: true });
     }
   };
 
@@ -356,12 +361,19 @@ const ProductForm = ({
           {form.watch('onSale') && (
             <div className="mt-2 flex flex-col gap-2 text-xs">
               <div className="flex items-center gap-2">
+                <select
+                  className="border rounded px-2 py-1 text-xs bg-background"
+                  value={saleDiscountType}
+                  onChange={(e) => form.setValue('saleDiscountType', e.target.value as 'percentage' | 'amount')}
+                >
+                  <option value="percentage">% off</option>
+                  <option value="amount">$ off</option>
+                </select>
                 <Input
                   type="number"
                   min={1}
-                  max={90}
                   step={1}
-                  placeholder="10"
+                  placeholder={saleDiscountType === 'percentage' ? '10' : '5'}
                   value={form.watch('salePercent') ?? ''}
                   onChange={(e) =>
                     form.setValue(
@@ -371,7 +383,7 @@ const ProductForm = ({
                   }
                   className="w-20"
                 />
-                <span>% off</span>
+                <span>{saleDiscountType === 'percentage' ? '% off' : '$ off'}</span>
               </div>
               <Input
                 type="datetime-local"

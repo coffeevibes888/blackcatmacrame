@@ -3,33 +3,64 @@ import { trackPageView } from '@/lib/actions/analytics.actions';
 
 export async function POST(request: NextRequest) {
   try {
-    const { path, referrer } = await request.json();
+    const body = await request.json();
+    const {
+      sessionCartId,
+      path,
+      referrer,
+      eventType,
+      eventData,
+      timeOnPage,
+      scrollDepth,
+      screenWidth,
+      screenHeight,
+      deviceType,
+      browserLang,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmContent,
+      utmTerm,
+    } = body;
 
-    const sessionCartId = request.cookies.get('sessionCartId')?.value;
-    const country = request.headers.get('x-vercel-ip-country');
-    const region = request.headers.get('x-vercel-ip-country-region');
-    const city = request.headers.get('x-vercel-ip-city');
-    const userAgent = request.headers.get('user-agent');
-
-    if (!sessionCartId || !path) {
-      return NextResponse.json({ ok: false }, { status: 400 });
+    if (!sessionCartId) {
+      return NextResponse.json({ error: 'Missing sessionCartId' }, { status: 400 });
     }
 
-    // User ID (if logged in) is already associated with the sessionCartId via auth
+    // Resolve client IP (works behind proxies like Vercel)
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0].trim() || '::1';
+
+    // Geo data is available on Vercel/Edge runtime
+    const geo = (request as unknown as { geo?: { country?: string; region?: string; city?: string } }).geo;
+
     await trackPageView({
       sessionCartId,
-      userId: undefined,
-      path,
+      path: path || '/',
       referrer: referrer || null,
-      country: country || null,
-      region: region || null,
-      city: city || null,
-      userAgent: userAgent || null,
+      country: geo?.country || null,
+      region: geo?.region || null,
+      city: geo?.city || null,
+      userAgent: request.headers.get('user-agent') || null,
+      ip,
+      eventType: eventType || 'pageview',
+      eventData: eventData || null,
+      timeOnPage: timeOnPage || null,
+      scrollDepth: scrollDepth || null,
+      screenWidth: screenWidth || null,
+      screenHeight: screenHeight || null,
+      deviceType: deviceType || null,
+      browserLang: browserLang || null,
+      utmSource: utmSource || null,
+      utmMedium: utmMedium || null,
+      utmCampaign: utmCampaign || null,
+      utmContent: utmContent || null,
+      utmTerm: utmTerm || null,
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in analytics track route', error);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    console.error('Analytics tracking error:', error);
+    return NextResponse.json({ error: 'Failed to track analytics' }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { useEffect, useState } from 'react';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 // Static target date (Dec 25, 2025 at 12:00 AM)
 const TARGET_DATE = new Date('2025-12-25T00:00:00');
@@ -25,9 +26,9 @@ const DealCountdown = () => {
   const [time, setTime] = useState<ReturnType<typeof calculateTimeRemaining>>();
 
   const photos = [
-    { id: 3, label: 'Rocken My Vibe', src: '/images/twolightblue.png' },
-    { id: 2, label: 'Behind the Scenes', src: '/images/light2.png' },
-    { id: 1, label: 'Deal Spotlight', src: '/images/light1.png' },
+    { id: 1, label: 'Deal Spotlight', src: '/images/walk3.png' },
+    { id: 3, label: 'Rocken My Vibe', src: '/images/walk1.png' },
+    { id: 2, label: 'Behind the Scenes', src: '/images/walk2.png' },
   ];
 
   useEffect(() => {
@@ -102,6 +103,10 @@ const DealCountdown = () => {
           exclusive perks and offers, making this month a celebration of savvy choices and amazing deals. Don&apos;t miss
           out! 🎁🛒
         </p>
+        <p className='text-base md:text-lg font-semibold text-amber-300'>
+          Deal of the Month: <span className='line-through text-gray-400'>$24.99</span>{' '}
+          <span className='text-emerald-400 font-bold'>Now Only $19.99</span>
+        </p>
         <ul className='grid grid-cols-4 rounded-2xl border border-white/10 bg-slate-950/70 overflow-hidden'>
           <StatBox label='Days' value={time.days} />
           <StatBox label='Hours' value={time.hours} />
@@ -110,12 +115,48 @@ const DealCountdown = () => {
         </ul>
         <div className='text-center'>
           <Button asChild>
-            <Link href='/search'>View Products</Link>
+            <Link href='/product/keep-walking-towards-god'>Buy Now</Link>
           </Button>
         </div>
       </div>
 
-      <div className='relative h-[320px] md:h-[380px] lg:h-[420px] mt-4 md:mt-8'>
+      {/* Mobile: swipeable carousel */}
+      <div className='relative h-[320px] mt-4 md:mt-8 md:hidden'>
+        <div className='absolute inset-0 bg-gradient-radial from-violet-500/35 via-transparent to-transparent blur-3xl opacity-80' />
+
+        <div className='relative h-full flex items-start justify-center'>
+          <div className='relative w-full max-w-md aspect-[4/5]'>
+            <Carousel
+              className='h-full'
+              opts={{
+                loop: true,
+              }}
+            >
+              <CarouselContent className='h-full'>
+                {photos.map((photo) => (
+                  <CarouselItem key={photo.id} className='h-full'>
+                    <div className='relative h-full rounded-2xl border border-white/15 overflow-hidden bg-slate-900/80 shadow-[0_18px_45px_rgba(15,23,42,0.85)]'>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.src}
+                        alt={photo.label}
+                        className='h-full w-full object-cover'
+                      />
+                      <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-2 pt-4 text-[11px] text-gray-100 flex items-center justify-between'>
+                        <span className='uppercase tracking-[0.15em] text-gray-300'>{photo.label}</span>
+                        <span className='text-[10px] text-violet-300'>Limited Time</span>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop / tablet: floating stacked photos */}
+      <div className='relative h-[320px] md:h-[380px] lg:h-[420px] mt-4 md:mt-8 hidden md:block'>
         <div className='absolute inset-0 bg-gradient-radial from-violet-500/35 via-transparent to-transparent blur-3xl opacity-80' />
 
         <div className='relative h-full flex items-start justify-center'>
@@ -127,7 +168,7 @@ const DealCountdown = () => {
                   key={photo.id}
                   className={`absolute rounded-2xl border border-white/15 overflow-hidden bg-slate-900/80 shadow-[0_18px_45px_rgba(15,23,42,0.85)] transition-all duration-300 ease-out cursor-pointer
                     hover:z-30 hover:scale-105 hover:-translate-y-2
-                    group-hover/pile:opacity-70 hover:!opacity-100
+                    group-hover/pile:opacity 25
                   `}
                   style={{
                     top: `${10 + index * 6}%`,

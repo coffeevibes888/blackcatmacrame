@@ -12,9 +12,46 @@ export async function trackPageView(params: {
   region?: string | null;
   city?: string | null;
   userAgent?: string | null;
+  ip?: string | null;
+  eventType?: string | null;
+  eventData?: Record<string, unknown> | null;
+  timeOnPage?: number | null;
+  scrollDepth?: number | null;
+  screenWidth?: number | null;
+  screenHeight?: number | null;
+  deviceType?: string | null;
+  browserLang?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  utmTerm?: string | null;
 }) {
   try {
-    const { sessionCartId, userId, path, referrer, country, region, city, userAgent } = params;
+    const {
+      sessionCartId,
+      userId,
+      path,
+      referrer,
+      country,
+      region,
+      city,
+      userAgent,
+      ip,
+      eventType,
+      eventData,
+      timeOnPage,
+      scrollDepth,
+      screenWidth,
+      screenHeight,
+      deviceType,
+      browserLang,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmContent,
+      utmTerm,
+    } = params;
 
     if (!sessionCartId || !path) return;
 
@@ -28,6 +65,20 @@ export async function trackPageView(params: {
         region: region ?? undefined,
         city: city ?? undefined,
         userAgent: userAgent ?? undefined,
+        ip: ip ?? undefined,
+        eventType: eventType ?? undefined,
+        eventData: eventData ?? undefined,
+        timeOnPage: timeOnPage ?? undefined,
+        scrollDepth: scrollDepth ?? undefined,
+        screenWidth: screenWidth ?? undefined,
+        screenHeight: screenHeight ?? undefined,
+        deviceType: deviceType ?? undefined,
+        browserLang: browserLang ?? undefined,
+        utmSource: utmSource ?? undefined,
+        utmMedium: utmMedium ?? undefined,
+        utmCampaign: utmCampaign ?? undefined,
+        utmContent: utmContent ?? undefined,
+        utmTerm: utmTerm ?? undefined,
       },
     });
   } catch (error) {

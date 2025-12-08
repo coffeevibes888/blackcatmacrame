@@ -4,7 +4,9 @@ import { APP_DESCRIPTION, APP_NAME, SERVER_URL } from '@/lib/constants';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/toaster';
 import { ChatWidget } from '@/components/shared/chat-widget';
-import PageViewTracker from '@/components/analytics/page-view-tracker';
+import { EnhancedTracker } from '@/components/analytics/enhanced-tracker';
+import { CookieConsent } from '@/components/cookie-consent';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: {
@@ -30,7 +32,9 @@ export default function RootLayout({
           forcedTheme='dark'
           disableTransitionOnChange
         >
-          <PageViewTracker />
+          <Suspense fallback={null}>
+            <EnhancedTracker />
+          </Suspense>
           <div
             className='w-full text-[11px] md:text-xs font-medium tracking-tight flex items-center overflow-hidden bg-gradient-to-r from-purple-700 via-purple-600 to-yellow-400 shadow-sm'
             style={{ height: '24px' }}
@@ -56,6 +60,7 @@ export default function RootLayout({
           {children}
           <Toaster />
           <ChatWidget />
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>

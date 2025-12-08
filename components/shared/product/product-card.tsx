@@ -9,6 +9,7 @@ type ProductWithSale = Product & {
   onSale?: boolean | null;
   saleUntil?: string | Date | null;
   salePercent?: number | string | null;
+  saleDiscountType?: 'percentage' | 'amount' | string | null;
 };
 
 const ProductCard = ({ product }: { product: Product }) => {
@@ -28,7 +29,17 @@ const ProductCard = ({ product }: { product: Product }) => {
   const salePercent = isOnSaleActive && rawSalePercent ? Number(rawSalePercent) : null;
 
   const originalPrice = Number(product.price);
-  const salePrice = salePercent ? originalPrice * (1 - salePercent / 100) : originalPrice;
+  const saleType = (extendedProduct.saleDiscountType as 'percentage' | 'amount' | undefined) ?? 'percentage';
+
+  let salePrice = originalPrice;
+  if (isOnSaleActive && salePercent && !Number.isNaN(salePercent)) {
+    if (saleType === 'amount') {
+      const discount = Math.min(salePercent, originalPrice);
+      salePrice = originalPrice - discount;
+    } else {
+      salePrice = originalPrice * (1 - salePercent / 100);
+    }
+  }
 
   const hasSecondImage = product.images && product.images.length > 1;
   const lowStock = product.stock > 0 && product.stock < 5;
@@ -61,7 +72,9 @@ const ProductCard = ({ product }: { product: Product }) => {
         </Link>
         {isOnSaleActive && salePercent && (
           <div className="absolute top-2 left-2 rounded-full bg-emerald-500 text-white text-[10px] px-2 py-1 font-semibold uppercase tracking-wide">
-            -{Math.round(salePercent)}%
+            {saleType === 'amount'
+              ? `-$${salePercent.toFixed(2)}`
+              : `-${Math.round(salePercent)}%`}
           </div>
         )}
       </CardHeader>

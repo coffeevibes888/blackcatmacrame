@@ -29,8 +29,9 @@ const baseProductSchema = z.object({
   colorIds: z.array(z.string()).optional(),
   sizeIds: z.array(z.string()).optional(),
   onSale: z.boolean().optional().default(false),
-  salePercent: z.coerce.number().min(1).max(90).optional(),
+  salePercent: z.coerce.number().min(1).optional(),
   saleUntil: z.string().datetime().nullable().optional(),
+  saleDiscountType: z.enum(['percentage', 'amount']).optional().default('percentage'),
 });
 
 // Schema for inserting products
@@ -40,8 +41,31 @@ export const insertProductSchema = baseProductSchema.superRefine((data, ctx) => 
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['salePercent'],
-        message: 'Sale percent is required when On Sale is enabled',
+        message: 'Sale value is required when On Sale is enabled',
       });
+      return;
+    }
+
+    const type = data.saleDiscountType ?? 'percentage';
+    const value = Number(data.salePercent);
+
+    if (type === 'percentage') {
+      if (value < 1 || value > 90) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['salePercent'],
+          message: 'Sale percent must be between 1 and 90',
+        });
+      }
+    } else if (type === 'amount') {
+      const priceNumber = Number(data.price);
+      if (value <= 0 || value >= priceNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['salePercent'],
+          message: 'Sale amount must be greater than 0 and less than the product price',
+        });
+      }
     }
   }
 });
@@ -57,8 +81,31 @@ export const updateProductSchema = baseProductSchema
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['salePercent'],
-          message: 'Sale percent is required when On Sale is enabled',
+          message: 'Sale value is required when On Sale is enabled',
         });
+        return;
+      }
+
+      const type = data.saleDiscountType ?? 'percentage';
+      const value = Number(data.salePercent);
+
+      if (type === 'percentage') {
+        if (value < 1 || value > 90) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['salePercent'],
+            message: 'Sale percent must be between 1 and 90',
+          });
+        }
+      } else if (type === 'amount') {
+        const priceNumber = Number(data.price);
+        if (value <= 0 || value >= priceNumber) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['salePercent'],
+            message: 'Sale amount must be greater than 0 and less than the product price',
+          });
+        }
       }
     }
   });

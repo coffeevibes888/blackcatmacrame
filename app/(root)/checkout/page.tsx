@@ -1,15 +1,29 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader, Check } from "lucide-react";
+import { Loader, Check, Edit } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Cart } from "@/types";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  LinkAuthenticationElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { useTheme } from "next-themes";
+import { SERVER_URL } from "@/lib/constants";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+);
 
 // NOTE: This is a client wrapper that relies on the existing cart API routes/actions via fetch.
 // It keeps implementation minimal while providing a unified checkout surface with guest fields.
@@ -34,13 +48,81 @@ const defaultGuestDetails: GuestDetails = {
   country: "",
 };
 
+// Payment form component that uses Stripe Elements
+const PaymentForm = ({
+  email,
+}: {
+  clientSecret: string;
+  email: string;
+  onSuccess: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handlePayment = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) return;
+
+    setIsProcessing(true);
+    setErrorMessage("");
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${SERVER_URL}/checkout/payment-success`,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message ?? "Payment failed. Please try again.");
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handlePayment} className="space-y-4">
+      {errorMessage && (
+        <div className="text-destructive bg-destructive/10 p-3 rounded text-sm">
+          {errorMessage}
+        </div>
+      )}
+      <PaymentElement />
+      <LinkAuthenticationElement
+        options={{ defaultValues: { email } }}
+      />
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={!stripe || !elements || isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <Loader className="w-4 h-4 animate-spin mr-2" />
+            Processing Payment...
+          </>
+        ) : (
+          "Complete Payment"
+        )}
+      </Button>
+    </form>
+  );
+};
+
 const CheckoutPage = () => {
   const router = useRouter();
   const { toast } = useToast();
+  const { theme, systemTheme } = useTheme();
   const [cart, setCart] = useState<Cart | null>(null);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
-  const [isPlacingOrder, startPlacingOrder] = useTransition();
+  const [isCreatingPayment, startCreatingPayment] = useTransition();
   const [guestDetails, setGuestDetails] = useState<GuestDetails>(defaultGuestDetails);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isFormLocked, setIsFormLocked] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof GuestDetails, string>>>({});
 
   useEffect(() => {
     const loadCart = async () => {
@@ -67,20 +149,68 @@ const CheckoutPage = () => {
 
   const handleGuestChange = (field: keyof GuestDetails, value: string) => {
     setGuestDetails((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user types
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
-  const handleSubmit = () => {
-    if (!guestDetails.email || !guestDetails.phone || !guestDetails.streetAddress) {
+  const validateForm = (): boolean => {
+    const errors: Partial<Record<keyof GuestDetails, string>> = {};
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!guestDetails.email) {
+      errors.email = "Email is required";
+    } else if (!emailRegex.test(guestDetails.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    // Phone validation (basic - accepts various formats)
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!guestDetails.phone) {
+      errors.phone = "Phone number is required";
+    } else if (!phoneRegex.test(guestDetails.phone) || guestDetails.phone.replace(/\D/g, "").length < 10) {
+      errors.phone = "Please enter a valid phone number";
+    }
+
+    // Required fields
+    if (!guestDetails.fullName || guestDetails.fullName.trim().length < 2) {
+      errors.fullName = "Full name is required";
+    }
+
+    if (!guestDetails.streetAddress || guestDetails.streetAddress.trim().length < 5) {
+      errors.streetAddress = "Street address is required";
+    }
+
+    if (!guestDetails.city || guestDetails.city.trim().length < 2) {
+      errors.city = "City is required";
+    }
+
+    if (!guestDetails.postalCode || guestDetails.postalCode.trim().length < 3) {
+      errors.postalCode = "Postal code is required";
+    }
+
+    if (!guestDetails.country || guestDetails.country.trim().length < 2) {
+      errors.country = "Country is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleProceedToPayment = () => {
+    if (!validateForm()) {
       toast({
         variant: "destructive",
-        description: "Please complete contact and shipping details before paying.",
+        description: "Please fix the errors in the form before proceeding.",
       });
       return;
     }
 
-    startPlacingOrder(async () => {
+    startCreatingPayment(async () => {
       try {
-        const res = await fetch("/api/checkout/guest", {
+        const res = await fetch("/api/checkout/create-payment-intent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ guestDetails }),
@@ -91,24 +221,26 @@ const CheckoutPage = () => {
         if (!res.ok || !data.success) {
           toast({
             variant: "destructive",
-            description: data.message || "Failed to place order",
+            description: data.message || "Failed to create payment",
           });
           return;
         }
 
-        if (data.redirectTo) {
-          router.push(data.redirectTo as string);
-          return;
-        }
-
-        router.push("/");
+        sessionStorage.setItem("guestDetails", JSON.stringify(guestDetails));
+        setClientSecret(data.clientSecret);
+        setIsFormLocked(true);
       } catch {
         toast({
           variant: "destructive",
-          description: "Something went wrong while placing your order.",
+          description: "Something went wrong. Please try again.",
         });
       }
     });
+  };
+
+  const handleEditForm = () => {
+    setIsFormLocked(false);
+    setClientSecret(null);
   };
 
   if (isLoadingCart) {
@@ -139,55 +271,117 @@ const CheckoutPage = () => {
       </div>
       <div className="grid md:grid-cols-3 md:gap-6">
         <div className="md:col-span-2 space-y-4">
-          <Card>
+          <Card className={isFormLocked ? "opacity-70" : ""}>
             <CardContent className="p-4 space-y-4">
-              <h2 className="text-lg font-semibold">Contact & Guest Details</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Contact & Guest Details</h2>
+                {isFormLocked && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEditForm}
+                    className="gap-1"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                  </Button>
+                )}
+              </div>
               <div className="space-y-3">
-                <Input
-                  placeholder="Full Name"
-                  value={guestDetails.fullName}
-                  onChange={(e) => handleGuestChange("fullName", e.target.value)}
-                />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={guestDetails.email}
-                  onChange={(e) => handleGuestChange("email", e.target.value)}
-                />
-                <Input
-                  type="tel"
-                  placeholder="Phone"
-                  value={guestDetails.phone}
-                  onChange={(e) => handleGuestChange("phone", e.target.value)}
-                />
+                <div>
+                  <Input
+                    placeholder="Full Name"
+                    value={guestDetails.fullName}
+                    onChange={(e) => handleGuestChange("fullName", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.fullName ? "border-destructive" : ""}
+                  />
+                  {formErrors.fullName && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.fullName}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={guestDetails.email}
+                    onChange={(e) => handleGuestChange("email", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.email ? "border-destructive" : ""}
+                  />
+                  {formErrors.email && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.email}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    type="tel"
+                    placeholder="Phone"
+                    value={guestDetails.phone}
+                    onChange={(e) => handleGuestChange("phone", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.phone ? "border-destructive" : ""}
+                  />
+                  {formErrors.phone && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.phone}</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={isFormLocked ? "opacity-70" : ""}>
             <CardContent className="p-4 space-y-4">
               <h2 className="text-lg font-semibold">Shipping Address</h2>
               <div className="space-y-3">
-                <Input
-                  placeholder="Street Address"
-                  value={guestDetails.streetAddress}
-                  onChange={(e) => handleGuestChange("streetAddress", e.target.value)}
-                />
-                <Input
-                  placeholder="City"
-                  value={guestDetails.city}
-                  onChange={(e) => handleGuestChange("city", e.target.value)}
-                />
-                <Input
-                  placeholder="Postal Code"
-                  value={guestDetails.postalCode}
-                  onChange={(e) => handleGuestChange("postalCode", e.target.value)}
-                />
-                <Input
-                  placeholder="Country"
-                  value={guestDetails.country}
-                  onChange={(e) => handleGuestChange("country", e.target.value)}
-                />
+                <div>
+                  <Input
+                    placeholder="Street Address"
+                    value={guestDetails.streetAddress}
+                    onChange={(e) => handleGuestChange("streetAddress", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.streetAddress ? "border-destructive" : ""}
+                  />
+                  {formErrors.streetAddress && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.streetAddress}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    placeholder="City"
+                    value={guestDetails.city}
+                    onChange={(e) => handleGuestChange("city", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.city ? "border-destructive" : ""}
+                  />
+                  {formErrors.city && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.city}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    placeholder="Postal Code"
+                    value={guestDetails.postalCode}
+                    onChange={(e) => handleGuestChange("postalCode", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.postalCode ? "border-destructive" : ""}
+                  />
+                  {formErrors.postalCode && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.postalCode}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    placeholder="Country"
+                    value={guestDetails.country}
+                    onChange={(e) => handleGuestChange("country", e.target.value)}
+                    disabled={isFormLocked}
+                    className={formErrors.country ? "border-destructive" : ""}
+                  />
+                  {formErrors.country && (
+                    <p className="text-xs text-destructive mt-1">{formErrors.country}</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -215,20 +409,52 @@ const CheckoutPage = () => {
               <p className="text-[11px] text-slate-500 mt-1">
                 Secure checkout powered by Stripe. Wallets like Apple Pay, Google Pay, and Cash App may be available.
               </p>
-              <Button
-                className="w-full mt-2"
-                disabled={isPlacingOrder}
-                onClick={handleSubmit}
-              >
-                {isPlacingOrder ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}{" "}
-                Pay Now
-              </Button>
+              {!clientSecret && (
+                <Button
+                  className="w-full mt-2"
+                  disabled={isCreatingPayment}
+                  onClick={handleProceedToPayment}
+                >
+                  {isCreatingPayment ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}{" "}
+                  Pay Now
+                </Button>
+              )}
             </CardContent>
           </Card>
+
+          {clientSecret && (
+            <Card className="animate-in slide-in-from-top-5 duration-300">
+              <CardContent className="p-4 space-y-4">
+                <h2 className="text-lg font-semibold">Payment Details</h2>
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme:
+                        theme === "dark"
+                          ? "night"
+                          : theme === "light"
+                          ? "stripe"
+                          : systemTheme === "light"
+                          ? "stripe"
+                          : "night",
+                    },
+                  }}
+                >
+                  <PaymentForm
+                    clientSecret={clientSecret}
+                    email={guestDetails.email}
+                    onSuccess={() => {}}
+                  />
+                </Elements>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
