@@ -67,7 +67,7 @@ function Product3DRotator() {
 
   const products = [
     { src: '/images/rocken.png', alt: 'Product 1' },
-    { src: '/images/light1.png', alt: 'Product 2' },
+    { src: '/images/rocken2.png', alt: 'Product 2' },
     { src: '/images/rocken1.png', alt: 'Product 3' },
   ];
 
