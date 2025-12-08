@@ -26,6 +26,7 @@ model Product {
   onSale      Boolean     @default(false)
   salePercent Decimal?    @db.Decimal(5, 2)
   saleUntil   DateTime?   @db.Timestamp(6)
+  saleDiscountType String @default("percentage")
   createdAt   DateTime    @default(now()) @db.Timestamp(6)
   OrderItem   OrderItem[]
   Review      Review[]

@@ -30,7 +30,7 @@ const baseProductSchema = z.object({
   sizeIds: z.array(z.string()).optional(),
   onSale: z.boolean().optional().default(false),
   salePercent: z.coerce.number().min(1).optional(),
-  saleUntil: z.string().datetime().nullable().optional(),
+  saleUntil: z.string().nullable().optional(),
   saleDiscountType: z.enum(['percentage', 'amount']).optional().default('percentage'),
 });
 

@@ -263,11 +263,16 @@ export async function deleteProduct(id: string) {
 export async function createProduct(data: z.infer<typeof insertProductSchema>) {
   try {
     const product = insertProductSchema.parse(data);
-    
     // Extract only Product model fields, excluding sizeIds and colorIds (variant metadata)
-    const { sizeIds, colorIds, ...productData } = product;
-    console.log('Color IDs:', colorIds); // Added this line to use colorIds
-    
+    const { sizeIds, colorIds, saleUntil, ...rest } = product;
+
+    const productData = {
+      ...rest,
+      // Convert saleUntil from string (from datetime-local input) to Date or null for Prisma
+      saleUntil: saleUntil ? new Date(saleUntil) : null,
+    };
+    console.log('Color IDs:', colorIds);
+
     // create product and optionally create variants from provided sizeIds
     const created = await prisma.product.create({ data: productData });
 
@@ -311,9 +316,14 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
     // Update product and optionally refresh variants
     await prisma.$transaction(async (tx) => {
       // Extract only Product model fields, excluding sizeIds and colorIds (variant metadata)
-      const { sizeIds, colorIds, ...productData } = product;
+      const { sizeIds, colorIds, saleUntil, ...rest } = product;
       void colorIds;
-      
+
+      const productData = {
+        ...rest,
+        saleUntil: saleUntil ? new Date(saleUntil) : null,
+      };
+
       await tx.product.update({ where: { id: product.id }, data: productData });
 
       // If sizeIds provided, remove existing variants and recreate (colorId no longer selected in UI)
