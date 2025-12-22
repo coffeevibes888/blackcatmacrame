@@ -21,7 +21,7 @@ const Header = async () => {
               src='/images/logo.png'
               fill
               className="object-contain"
-              alt="Black Cat Macrame Logo"
+              alt="Macrame Black Cat Logo"
               priority={true}
             />
           </div>
@@ -41,7 +41,7 @@ const Header = async () => {
               <Image src='/images/logo.png'
                 fill
                 className="object-contain"
-                alt="Black Cat Macrame Logo"
+                alt="Macrame Black Cat Logo"
                 priority={true}
               />
             </div>

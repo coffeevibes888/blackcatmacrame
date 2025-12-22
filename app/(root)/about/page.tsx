@@ -10,7 +10,7 @@ const AboutPage = () => {
         <header className="space-y-2 mb-10 text-center">
           <p className="text-xs tracking-[0.3em] uppercase text-violet-300">About</p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_35px_rgba(139,92,246,0.4)]">
-            Black Cat Macrame
+            Macrame Black Cat
           </h1>
           <p className="max-w-2xl mx-auto text-sm md:text-base text-gray-200/90">
             Handcrafted macrame jewelry woven with intention, love, and artistic passion. Every piece tells a story.
@@ -22,7 +22,7 @@ const AboutPage = () => {
             <div className="rounded-3xl border border-violet-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/70 p-6 md:p-8 shadow-[0_0_60px_rgba(124,58,237,0.35)]">
               <p className="text-xs font-semibold tracking-[0.2em] text-violet-200 uppercase mb-2">The Story</p>
               <p className="text-sm md:text-base text-gray-100 leading-relaxed">
-                Welcome to Black Cat Macrame, where every knot carries intention and every piece celebrates the beauty of handcrafted artistry. I create unique, wearable art through the ancient craft of macrame — transforming simple cords into stunning jewelry that connects you to something meaningful.
+                Welcome to Macrame Black Cat, where every knot carries intention and every piece celebrates the beauty of handcrafted artistry. I create unique, wearable art through the ancient craft of macrame — transforming simple cords into stunning jewelry that connects you to something meaningful.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
                 What started as a personal creative journey has blossomed into a passion for bringing handmade, artisanal jewelry to people who appreciate the time, effort, and love that goes into each creation. Every bracelet, necklace, and accessory is made with intention, care, and attention to detail.
@@ -31,7 +31,7 @@ const AboutPage = () => {
                 I believe that macrame jewelry isn&apos;t just decoration — it&apos;s a connection. Whether you&apos;re drawn to the bohemian aesthetic, the spiritual symbolism, or simply the beauty of handcrafted artistry, each piece in my collection is designed to resonate with your unique style and energy.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                Black Cat Macrame celebrates individuality, craftsmanship, and the magic that happens when you wear something made with your name on the artist&apos;s heart. Each piece is one-of-a-kind, just like you.
+                Macrame Black Cat celebrates individuality, craftsmanship, and the magic that happens when you wear something made with your name on the artist&apos;s heart. Each piece is one-of-a-kind, just like you.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
                 Thank you for being here. Whether you&apos;re looking for the perfect accessory or a meaningful gift, I&apos;m honored to share my artistry with you. Let&apos;s celebrate the beauty of handmade.
@@ -72,7 +72,7 @@ const AboutPage = () => {
                       />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-2 pt-4 text-[11px] text-gray-100 flex items-center justify-between">
                         <span className="uppercase tracking-[0.15em] text-gray-300">{photo.label}</span>
-                        <span className="text-[10px] text-violet-300">Black Cat Macrame</span>
+                        <span className="text-[10px] text-violet-300">Macrame Black Cat</span>
                       </div>
                     </div>
                   ))}

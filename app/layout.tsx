@@ -10,7 +10,7 @@ import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: {
-    template: `%s | Black Cat Macrame`,
+    template: `%s | Macrame Black Cat`,
     default: APP_NAME,
   },
   description: APP_DESCRIPTION,

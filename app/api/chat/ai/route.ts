@@ -62,7 +62,7 @@ async function callOpenAI(message: string): Promise<string | null> {
           {
             role: 'system',
             content:
-              'You are a helpful customer support assistant for Black Cat Macrame, a handcrafted macrame jewelry store. Be friendly, concise, and helpful. Keep responses under 150 words.',
+              'You are a helpful customer support assistant for Macrame Black Cat, a handcrafted macrame jewelry store. Be friendly, concise, and helpful. Keep responses under 150 words.',
           },
           {
             role: 'user',

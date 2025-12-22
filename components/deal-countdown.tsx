@@ -28,7 +28,7 @@ const DealCountdown = () => {
 
   const photos = [
     { id: 1, label: 'Deal Spotlight', src: '/images/walk3.png' },
-    { id: 3, label: 'Black Cat Macrame', src: '/images/walk1.png' },
+    { id: 3, label: 'Macrame Black Cat', src: '/images/walk1.png' },
     { id: 2, label: 'Behind the Scenes', src: '/images/walk2.png' },
   ];
 

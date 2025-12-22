@@ -21,7 +21,7 @@ const BlogPage = async () => {
         <header className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold text-white">Blog</h1>
           <p className="text-gray-300 text-sm md:text-base">
-            Stories, inspiration, and behind-the-scenes from Black Cat Macrame.
+            Stories, inspiration, and behind-the-scenes from Macrame Black Cat.
           </p>
         </header>
 
@@ -116,7 +116,7 @@ const BlogPage = async () => {
                         <div className="text-right space-y-1">
                           <p className="text-[11px] uppercase tracking-wide text-gray-400">Author</p>
                           <p className="text-sm font-semibold text-white">
-                            {post.author?.name || 'Black Cat Macrame'}
+                            {post.author?.name || 'Macrame Black Cat'}
                           </p>
                         </div>
                       </div>

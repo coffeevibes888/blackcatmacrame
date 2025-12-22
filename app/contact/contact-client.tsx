@@ -67,7 +67,7 @@ const ContactClient = () => {
         <div className="relative w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] lg:w-[380px] lg:h-[380px]">
           <Image
             src="/images/logo.png"
-            alt="Black Cat Macrame logo watermark"
+            alt="Macrame Black Cat logo watermark"
             fill
             className="object-contain drop-shadow-[0_0_45px_rgba(129,140,248,0.6)]"
             priority
@@ -88,7 +88,7 @@ const ContactClient = () => {
                   Let&apos;s build something unforgettable
                 </p>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">
-                  Contact <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">Black Cat Macrame</span>
+                  Contact <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">Macrame Black Cat</span>
                 </h1>
                 <p className="text-sm sm:text-base text-slate-300/80 max-w-xl">
                   Share a bit about your custom macrame request, ideas, or vision. I&apos;ll review your message and reply with next steps, timelines, and details to match your style.
@@ -192,7 +192,7 @@ const ContactClient = () => {
                   </div>
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-300/80">
-                      Black Cat Macrame
+                      Macrame Black Cat
                     </p>
                     <p className="text-sm text-slate-100/90">Handcrafted Macrame Jewelry</p>
                   </div>

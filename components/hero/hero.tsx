@@ -23,7 +23,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.9, ease: 'easeOut' }}
             >
-              Black Cat Macrame
+              Macrame Black Cat
             </motion.h1>
             <motion.p
               className="text-sm sm:text-lg text-white/90 max-w-xl mx-auto md:mx-0 font-light"

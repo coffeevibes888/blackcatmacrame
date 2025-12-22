@@ -28,7 +28,7 @@ export default function ResetPassword({ email, resetLink }: ResetPasswordProps) 
             <Section className='text-center mb-6'>
               <Img
                 src='https://rockenmyvibe.com/images/logo.png'
-                alt='Black Cat Macrame'
+                alt='Macrame Black Cat'
                 width='160'
                 className='mx-auto mb-3'
               />
@@ -45,7 +45,7 @@ export default function ResetPassword({ email, resetLink }: ResetPasswordProps) 
                 Hey {email},
               </Text>
               <Text className='text-sm leading-relaxed text-slate-300 mb-6'>
-                We received a request to reset your Black Cat Macrame password. Tap the button below to securely choose a new one.
+                We received a request to reset your Macrame Black Cat password. Tap the button below to securely choose a new one.
               </Text>
 
               <Section className='text-center mb-6'>
@@ -76,7 +76,7 @@ export default function ResetPassword({ email, resetLink }: ResetPasswordProps) 
 
             <Section className='mt-6 text-center'>
               <Text className='text-[10px] tracking-[0.18em] uppercase text-slate-500 mb-1'>
-                Black Cat Macrame
+                Macrame Black Cat
               </Text>
               <Text className='text-[10px] text-slate-600'>
                 Feel the energy. Protect your account.
