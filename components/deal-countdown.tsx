@@ -192,11 +192,4 @@ const DealCountdown = () => {
   );
 };
 
-const StatBox = ({ label, value }: { label: string; value: number }) => (
-  <li className='p-4 w-full text-center'>
-    <p className='text-3xl font-bold'>{value}</p>
-    <p>{label}</p>
-  </li>
-);
-
 export default DealCountdown;

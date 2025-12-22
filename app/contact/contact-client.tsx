@@ -91,7 +91,7 @@ const ContactClient = () => {
                   Contact <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">Black Cat Macrame</span>
                 </h1>
                 <p className="text-sm sm:text-base text-slate-300/80 max-w-xl">
-                  Share a bit about your custom macrame request, ideas, or vision. I'll review your message and reply with next steps, timelines, and details to match your style.
+                  Share a bit about your custom macrame request, ideas, or vision. I&apos;ll review your message and reply with next steps, timelines, and details to match your style.
                 </p>
               </header>
 
@@ -200,7 +200,7 @@ const ContactClient = () => {
 
                 <div className="space-y-3">
                   <p className="text-sm text-slate-200/90">
-                    Every piece is a chance to create wearable art that feels alive. Share your macrame vision and we'll craft something beautiful and unique.
+                    Every piece is a chance to create wearable art that feels alive. Share your macrame vision and we&apos;ll craft something beautiful and unique.
                   </p>
                   <p className="text-xs text-slate-300/75">
                     Expect a thoughtful response, usually within 24–48 hours depending on current workload.
@@ -240,7 +240,7 @@ const ContactClient = () => {
 
               <div className="relative mt-6 flex items-center justify-between gap-3 text-[11px] text-slate-300/80">
                 <p className="max-w-[70%]">
-                  Ready when you are. The more context you share, the more tailored the response.
+                  Ready when you&apos;re here. The more context you share, the more tailored the response.
                 </p>
                 <div className="inline-flex items-center gap-1 rounded-full bg-white/5 px-3 py-1.5 text-[10px] font-medium tracking-wide text-emerald-200/90 ring-1 ring-emerald-400/40">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
