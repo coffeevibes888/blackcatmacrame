@@ -10,7 +10,7 @@ import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: {
-    template: `%s | Rocken My Vibe`,
+    template: `%s | Black Cat Macrame`,
     default: APP_NAME,
   },
   description: APP_DESCRIPTION,
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className='bg-gradient-to-br from-slate-950 via-violet-800/60 to-slate-900 text-foreground flex flex-col min-h-screen overflow-x-hidden'>
+      <body className='bg-gradient-to-r from-pink-400 via-zinc-700 to-stone-900 text-foreground flex flex-col min-h-screen overflow-x-hidden'>
         <ThemeProvider
           attribute='class'
           defaultTheme='dark'

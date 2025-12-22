@@ -19,7 +19,7 @@ const CategoryDrawer = async () => {
           <MenuIcon />
         </Button>
       </DrawerTrigger>
-      <DrawerContent className='h-full max-w-sm bg-linear-to-r from-slate-700 via-violet-600 to-stone-900'>
+      <DrawerContent className='h-full max-w-sm bg-gradient-to-r from-neutral-800 via-pink-400 to-pink-400'>
         <DrawerHeader>
           <DrawerTitle>Select a category</DrawerTitle>
           <div className='mt-8'>

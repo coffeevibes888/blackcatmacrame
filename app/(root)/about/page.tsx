@@ -10,11 +10,10 @@ const AboutPage = () => {
         <header className="space-y-2 mb-10 text-center">
           <p className="text-xs tracking-[0.3em] uppercase text-violet-300">About</p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[0_0_35px_rgba(139,92,246,0.4)]">
-            Rocken My Vibe
+            Black Cat Macrame
           </h1>
           <p className="max-w-2xl mx-auto text-sm md:text-base text-gray-200/90">
-            Faith, humor, and real-life stories stitched into every design. This is where the heart behind
-            Rocken My Vibe lives.
+            Handcrafted macrame jewelry woven with intention, love, and artistic passion. Every piece tells a story.
           </p>
         </header>
 
@@ -23,33 +22,19 @@ const AboutPage = () => {
             <div className="rounded-3xl border border-violet-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/70 p-6 md:p-8 shadow-[0_0_60px_rgba(124,58,237,0.35)]">
               <p className="text-xs font-semibold tracking-[0.2em] text-violet-200 uppercase mb-2">The Story</p>
               <p className="text-sm md:text-base text-gray-100 leading-relaxed">
-                Hey, I&apos;m Allen — the creator, designer, and soul behind Rocken My Vibe. I didn&apos;t start this brand from a
-                perfect place… actually, it came from surviving some of the hardest chapters of my life. From near-death
-                experiences to spiritual awakenings, from rebuilding my faith to rebuilding my confidence — every step
-                shaped who I am and what this brand stands for.
+                Welcome to Black Cat Macrame, where every knot carries intention and every piece celebrates the beauty of handcrafted artistry. I create unique, wearable art through the ancient craft of macrame — transforming simple cords into stunning jewelry that connects you to something meaningful.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                I&apos;m a person who lives in two worlds at once: the spiritual one that speaks in signs, visions, and
-                synchronicities… and the everyday physical world where bills, jobs, and real-life struggles don&apos;t
-                magically disappear. Rocken My Vibe is the bridge I built between those worlds.
+                What started as a personal creative journey has blossomed into a passion for bringing handmade, artisanal jewelry to people who appreciate the time, effort, and love that goes into each creation. Every bracelet, necklace, and accessory is made with intention, care, and attention to detail.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                After years of feeling like I didn&apos;t fit in, I realized something powerful: your vibe isn&apos;t supposed to
-                match the room — it&apos;s supposed to shift it. So I turned my experiences, my connection with God, my sense
-                of humor, and even my scars into something creative. I stopped hiding, stopped playing small, and decided
-                to design clothes that carry a message — sometimes bold, sometimes funny, sometimes spiritual, but always
-                real.
+                I believe that macrame jewelry isn&apos;t just decoration — it&apos;s a connection. Whether you&apos;re drawn to the bohemian aesthetic, the spiritual symbolism, or simply the beauty of handcrafted artistry, each piece in my collection is designed to resonate with your unique style and energy.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                This brand is for the people who&apos;ve been through things… the ones who feel energy deeply, who&apos;ve survived
-                storms, who&apos;ve seen darkness but still choose light. It&apos;s for anyone who&apos;s ever felt &quot;different&quot; in the
-                best (and hardest) ways. Rocken My Vibe is my reminder — and yours — that faith can be stylish, healing
-                can be loud, and your story is worth wearing.
+                Black Cat Macrame celebrates individuality, craftsmanship, and the magic that happens when you wear something made with your name on the artist&apos;s heart. Each piece is one-of-a-kind, just like you.
               </p>
               <p className="mt-4 text-sm md:text-base text-gray-200 leading-relaxed">
-                If you&apos;re here, welcome. Whether you came for the graphics, the message, or just curiosity — I&apos;m glad
-                you&apos;re part of this journey. Let&apos;s walk it together. With courage. With humor. With God. And most
-                importantly… let&apos;s rock our vibe.
+                Thank you for being here. Whether you&apos;re looking for the perfect accessory or a meaningful gift, I&apos;m honored to share my artistry with you. Let&apos;s celebrate the beauty of handmade.
               </p>
             </div>
           </div>
@@ -87,7 +72,7 @@ const AboutPage = () => {
                       />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-2 pt-4 text-[11px] text-gray-100 flex items-center justify-between">
                         <span className="uppercase tracking-[0.15em] text-gray-300">{photo.label}</span>
-                        <span className="text-[10px] text-violet-300">Rocken My Vibe</span>
+                        <span className="text-[10px] text-violet-300">Black Cat Macrame</span>
                       </div>
                     </div>
                   ))}

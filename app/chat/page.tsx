@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import SupportStatusToggle from '@/components/shared/support-status-toggle';
 
 export const metadata = {
-  title: 'Support Chat | Rocken My Vibe',
+  title: 'Support Chat | Black Cat Macrame',
   description: 'Get help from our AI assistant and live agents',
 };
 
@@ -50,7 +50,7 @@ export default async function ChatPage() {
               📝 About
             </h3>
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              This chat supports both AI and live agents. During live support hours, a Rocken My Vibe team member can join the
+              This chat supports both AI and live agents. During live support hours, a Black Cat Macrame team member can join the
               conversation. After hours, our AI assistant can still help with tracking, returns, sizing, and more.
             </p>
           </div>

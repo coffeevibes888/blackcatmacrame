@@ -18,10 +18,10 @@ const Header = async () => {
         <Link href='/' className="flex items-center justify-center">
           <div className="relative w-28 h-16">
             <Image
-              src='/images/2.svg'
+              src='/images/logo.png'
               fill
               className="object-contain"
-              alt="Rocken My Vibe Logo"
+              alt="Black Cat Macrame Logo"
               priority={true}
             />
           </div>
@@ -33,15 +33,15 @@ const Header = async () => {
       </div>
 
       {/* Desktop / tablet header */}
-      <div className="wrapper hidden md:flex items-center justify-between">
+      <div className="wrapper hidden md:flex items-center justify-between bg-gradient-to-r from-pink-400 via-zinc-700 to-stone-900">
         <div className="flex items-center">
           <Link href='/' className="flex items-center">
             <CategoryDrawer />
             <div className="relative w-36 h-36">
-              <Image src='/images/2.svg'
+              <Image src='/images/logo.png'
                 fill
                 className="object-contain"
-                alt="Rocken My Vibe Logo"
+                alt="Black Cat Macrame Logo"
                 priority={true}
               />
             </div>

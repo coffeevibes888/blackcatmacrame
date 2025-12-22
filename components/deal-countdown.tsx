@@ -28,7 +28,7 @@ const DealCountdown = () => {
 
   const photos = [
     { id: 1, label: 'Deal Spotlight', src: '/images/walk3.png' },
-    { id: 3, label: 'Rocken My Vibe', src: '/images/walk1.png' },
+    { id: 3, label: 'Black Cat Macrame', src: '/images/walk1.png' },
     { id: 2, label: 'Behind the Scenes', src: '/images/walk2.png' },
   ];
 
@@ -98,25 +98,14 @@ const DealCountdown = () => {
   return (
     <section className='grid grid-cols-1 md:grid-cols-2 my-20 gap-10 items-start'>
       <div className='flex flex-col gap-4 justify-center'>
-        <h3 className='text-3xl md:text-4xl font-bold text-white'>Deal Of The Month</h3>
+        <h3 className='text-3xl md:text-4xl font-bold text-white'>Buy Our Merch</h3>
         <p className='text-sm md:text-base text-gray-200'>
-          Get ready for a shopping experience like never before with our Deals of the Month! Every purchase comes with
-          exclusive perks and offers, making this month a celebration of savvy choices and amazing deals. Don&apos;t miss
-          out! 🎁🛒
+          Discover our beautiful collection of handcrafted macrame jewelry. Each piece is uniquely designed with care
+          and intention, perfect for adding a touch of bohemian elegance to your style. Support artisan craftsmanship!
         </p>
-        <p className='text-base md:text-lg font-semibold text-amber-300'>
-          Deal of the Month: <span className='line-through text-gray-400'>$24.99</span>{' '}
-          <span className='text-emerald-400 font-bold'>Now Only $19.99</span>
-        </p>
-        <ul className='grid grid-cols-4 rounded-2xl border border-white/10 bg-slate-950/70 overflow-hidden'>
-          <StatBox label='Days' value={time.days} />
-          <StatBox label='Hours' value={time.hours} />
-          <StatBox label='Minutes' value={time.minutes} />
-          <StatBox label='Seconds' value={time.seconds} />
-        </ul>
         <div className='text-center'>
           <Button asChild>
-            <Link href='/product/keep-walking-towards-god'>Buy Now</Link>
+            <Link href='/products'>Shop Now</Link>
           </Button>
         </div>
       </div>

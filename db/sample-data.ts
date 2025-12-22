@@ -36,7 +36,7 @@ const sampleData = {
     {
       name: 'Polo Sporting Stretch Shirt',
       slug: 'polo-sporting-stretch-shirt',
-      category: "Men's Dress Shirts",
+      category: "PENDANT NECKLACES",
       description: 'Classic Polo style with modern comfort',
       images: [
         '/images/sample-products/p1-1.jpg',
@@ -53,7 +53,7 @@ const sampleData = {
     {
       name: 'Brooks Brothers Long Sleeved Shirt',
       slug: 'brooks-brothers-long-sleeved-shirt',
-      category: "Men's Dress Shirts",
+      category: "JEWELRY SETS",
       description: 'Timeless style and premium comfort',
       images: [
         '/images/sample-products/p2-1.jpg',
@@ -70,7 +70,7 @@ const sampleData = {
     {
       name: 'Tommy Hilfiger Classic Fit Dress Shirt',
       slug: 'tommy-hilfiger-classic-fit-dress-shirt',
-      category: "Men's Dress Shirts",
+      category: "MACRAME TRESS AND POUCHES",
       description: 'A perfect blend of sophistication and comfort',
       images: [
         '/images/sample-products/p3-1.jpg',
@@ -87,7 +87,7 @@ const sampleData = {
     {
       name: 'Calvin Klein Slim Fit Stretch Shirt',
       slug: 'calvin-klein-slim-fit-stretch-shirt',
-      category: "Men's Dress Shirts",
+      category: "CHOKERS AND OTHER NECKLACES",
       description: 'Streamlined design with flexible stretch fabric',
       images: [
         '/images/sample-products/p4-1.jpg',
@@ -104,7 +104,7 @@ const sampleData = {
     {
       name: 'Polo Ralph Lauren Oxford Shirt',
       slug: 'polo-ralph-lauren-oxford-shirt',
-      category: "Men's Dress Shirts",
+      category: "PENDANT NECKLACES",
       description: 'Iconic Polo design with refined oxford fabric',
       images: [
         '/images/sample-products/p5-1.jpg',
@@ -121,7 +121,7 @@ const sampleData = {
     {
       name: 'Polo Classic Pink Hoodie',
       slug: 'polo-classic-pink-hoodie',
-      category: "Men's Sweatshirts",
+      category: "BRACELETS",
       description: 'Soft, stylish, and perfect for laid-back days',
       images: [
         '/images/sample-products/p6-1.jpg',

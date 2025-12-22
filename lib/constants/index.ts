@@ -1,6 +1,6 @@
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Rocken My Vibe';
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Black Cat Macrame';
 export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION ||
-  'Style Your Soul & Your Body Will Thank You For';
+  'Handcrafted Macrame Jewelry Made with Love & Intention';
 export const SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || 'https://www.rooms4rentlv.com';
 export const LATEST_PRODUCTS_LIMIT =

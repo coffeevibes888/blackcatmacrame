@@ -39,18 +39,18 @@ const normalizeProducts = (products: RawProduct[]): Product[] =>
   });
 
 const Homepage = async () => {
-  // Themed sections: make sure your products use these category names (e.g. "Faith", "Funny", "Deals", "Christmas")
-  const faithBasedProductsRaw = await getLatestProductsByCategory('Faith', 20);
-  const funnyProductsRaw = await getLatestProductsByCategory('Funny', 20);
-  const positiveProductsRaw = await getLatestProductsByCategory('Positive', 20);
-  const christmasProductsRaw = await getLatestProductsByCategory('Christmas', 20);
-  const firstProductsRaw = await getLatestProductsByCategory('First', 20);
+  // Themed sections: make sure your products use these category names
+  const pendantNecklacesRaw = await getLatestProductsByCategory('PENDANT NECKLACES', 20);
+  const jewelrySetsRaw = await getLatestProductsByCategory('JEWELRY SETS', 20);
+  const braceletsRaw = await getLatestProductsByCategory('BRACELETS', 20);
+  const macrameAccessoriesRaw = await getLatestProductsByCategory('MACRAME TRESS AND POUCHES', 20);
+  const chokersRaw = await getLatestProductsByCategory('CHOKERS AND OTHER NECKLACES', 20);
 
-  const faithBasedProducts = normalizeProducts(faithBasedProductsRaw);
-  const funnyProducts = normalizeProducts(funnyProductsRaw);
-  const positiveProducts = normalizeProducts(positiveProductsRaw);
-  const christmasProducts = normalizeProducts(christmasProductsRaw);
-  const firstProducts = normalizeProducts(firstProductsRaw);
+  const pendantNecklaces = normalizeProducts(pendantNecklacesRaw);
+  const jewelrySets = normalizeProducts(jewelrySetsRaw);
+  const bracelets = normalizeProducts(braceletsRaw);
+  const macrameAccessories = normalizeProducts(macrameAccessoriesRaw);
+  const chokers = normalizeProducts(chokersRaw);
 
   return (
     <>
@@ -63,23 +63,23 @@ const Homepage = async () => {
       )} */}
 
       {/* Themed collections as simple entry points */}
-      {faithBasedProducts.length > 0 && (
-        <ProductList data={faithBasedProducts} title='Faith Based Vibes' />
+      {pendantNecklaces.length > 0 && (
+        <ProductList data={pendantNecklaces} title='Pendant Necklaces' />
       )}
-      {positiveProducts.length > 0 && (
-        <ProductList data={positiveProducts} title="Positive Vibes" />
+      {jewelrySets.length > 0 && (
+        <ProductList data={jewelrySets} title="Jewelry Sets" />
       )}
-      {firstProducts.length > 0 && (
-        <ProductList data={firstProducts} title='Military & First Responders' />
-      )}
-
-      {funnyProducts.length > 0 && (
-        <ProductList data={funnyProducts} title='Funny & Bold' />
+      {bracelets.length > 0 && (
+        <ProductList data={bracelets} title='Bracelets' />
       )}
 
+      {macrameAccessories.length > 0 && (
+        <ProductList data={macrameAccessories} title='Macrame Tress & Pouches' />
+      )}
 
-      {christmasProducts.length > 0 && (
-        <ProductList data={christmasProducts} title='Holiday & Christmas' />
+
+      {chokers.length > 0 && (
+        <ProductList data={chokers} title='Chokers & Other Necklaces' />
       )}
 
 

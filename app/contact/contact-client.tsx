@@ -67,7 +67,7 @@ const ContactClient = () => {
         <div className="relative w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] lg:w-[380px] lg:h-[380px]">
           <Image
             src="/images/logo.png"
-            alt="RockEnMyVibe logo watermark"
+            alt="Black Cat Macrame logo watermark"
             fill
             className="object-contain drop-shadow-[0_0_45px_rgba(129,140,248,0.6)]"
             priority
@@ -88,10 +88,10 @@ const ContactClient = () => {
                   Let&apos;s build something unforgettable
                 </p>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">
-                  Contact <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">RockEnMyVibe</span>
+                  Contact <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">Black Cat Macrame</span>
                 </h1>
                 <p className="text-sm sm:text-base text-slate-300/80 max-w-xl">
-                  Share a bit about your project, ideas, or vision. I&apos;ll review your message and reply with next steps, timelines, and energy to match your vibe.
+                  Share a bit about your custom macrame request, ideas, or vision. I'll review your message and reply with next steps, timelines, and details to match your style.
                 </p>
               </header>
 
@@ -138,32 +138,6 @@ const ContactClient = () => {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300/80">
-                      Project Type
-                    </label>
-                    <select
-                      value={projectType}
-                      onChange={(e) => setProjectType(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-50 outline-none transition focus:border-violet-400/70 focus:ring-2 focus:ring-violet-500/40 bg-[rgba(15,23,42,0.4)]"
-                    >
-                      <option value="" className="bg-slate-900">
-                        Select a vibe
-                      </option>
-                      <option value="website" className="bg-slate-900">
-                        Full website experience
-                      </option>
-                      <option value="branding" className="bg-slate-900">
-                        Brand / visual refresh
-                      </option>
-                      <option value="ui" className="bg-slate-900">
-                        UI / UX design
-                      </option>
-                      <option value="consult" className="bg-slate-900">
-                        Consultation / collab
-                      </option>
-                    </select>
-                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -218,15 +192,15 @@ const ContactClient = () => {
                   </div>
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-300/80">
-                      RockEnMyVibe
+                      Black Cat Macrame
                     </p>
-                    <p className="text-sm text-slate-100/90">Creative Web Experiences</p>
+                    <p className="text-sm text-slate-100/90">Handcrafted Macrame Jewelry</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-sm text-slate-200/90">
-                    Every project is a chance to craft a digital experience that feels alive. Share your idea and we&apos;ll turn it into something people remember.
+                    Every piece is a chance to create wearable art that feels alive. Share your macrame vision and we'll craft something beautiful and unique.
                   </p>
                   <p className="text-xs text-slate-300/75">
                     Expect a thoughtful response, usually within 24–48 hours depending on current workload.
@@ -238,7 +212,7 @@ const ContactClient = () => {
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400/90">
                       Direct Email
                     </p>
-                    <p className="mt-1 font-medium break-all">contact@rockenmyvibe.com</p>
+                    <p className="mt-1 font-medium break-all">macrameblackcat@gmail.com</p>
                   </div>
 
                   <div className="rounded-xl border border-white/10 bg-slate-900/60 px-3.5 py-3 text-xs text-slate-200/90">

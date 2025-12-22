@@ -15,7 +15,7 @@ export default function Hero() {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="text-center md:text-left space-y-3"
           >
-            <p className="text-xs tracking-[0.35em] uppercase text-gray-400">Discover Style</p>
+            <p className="text-xs tracking-[0.35em] uppercase text-gray-400">Handcrafted with Purpose</p>
             <motion.h1
               className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight bg-gradient-to-r from-fuchsia-300 via-violet-200 to-sky-300 bg-clip-text text-transparent drop-shadow-[0_0_32px_rgba(129,140,248,0.65)]"
               style={{ fontFamily: 'Helvetica Neue, system-ui' }}
@@ -23,7 +23,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.9, ease: 'easeOut' }}
             >
-              Rocken My Vibe
+              Black Cat Macrame
             </motion.h1>
             <motion.p
               className="text-sm sm:text-lg text-white/90 max-w-xl mx-auto md:mx-0 font-light"
@@ -31,7 +31,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.7, ease: 'easeOut' }}
             >
-              Style your soul and your body will thank you for it.
+              Artisan-crafted macrame jewelry that weaves intention into every knot.
             </motion.p>
           </motion.div>
 

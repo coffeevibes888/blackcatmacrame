@@ -45,7 +45,7 @@ const Menu = async () => {
           <SheetTrigger className='align-middle'>
             <EllipsisVertical />
           </SheetTrigger>
-          <SheetContent className='flex flex-col items-start bg-linear-to-r from-slate-700 via-violet-600 to-stone-900'>
+          <SheetContent className='flex flex-col items-start bg-gradient-to-r from-pink-400 via-pink-400 to-gray-800'>
             <SheetTitle></SheetTitle>
             <ModeToggle />
             <NotificationBell isAdmin={isAdmin} />
