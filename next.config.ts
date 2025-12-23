@@ -10,7 +10,27 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '*.ufs.sh',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploadthing.com',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.uploadthing.com',
+        port: '',
+      },
+      {
+        protocol: 'https',
         hostname: 'files.cdn.printful.com',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
         port: '',
       },
     ],

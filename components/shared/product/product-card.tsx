@@ -43,30 +43,39 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   const hasSecondImage = product.images && product.images.length > 1;
   const lowStock = product.stock > 0 && product.stock < 5;
+  const hasImages = product.images && product.images.length > 0 && product.images[0];
 
   return (
     <Card className="bg-transparent border-white rounded-xl overflow-hidden shadow-sm">
       <CardHeader className="p-0 items-center relative">
         <Link href={`/product/${product.slug}`} className="block group">
-          <div className="relative w-full aspect-square overflow-hidden">
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              priority={true}
-              className={`object-cover transition-opacity duration-300 ${
-                hasSecondImage ? 'group-hover:opacity-0' : ''
-              }`}
-            />
-            {hasSecondImage && (
-              <Image
-                src={product.images[1]}
-                alt={product.name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              />
+          <div className="relative w-full aspect-square overflow-hidden bg-slate-800">
+            {hasImages ? (
+              <>
+                <Image
+                  src={product.images[0]}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  priority={true}
+                  className={`object-cover transition-opacity duration-300 ${
+                    hasSecondImage ? 'group-hover:opacity-0' : ''
+                  }`}
+                />
+                {hasSecondImage && (
+                  <Image
+                    src={product.images[1]}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  />
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-slate-500 text-xs">
+                No image
+              </div>
             )}
           </div>
         </Link>

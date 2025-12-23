@@ -13,11 +13,12 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { createProduct, updateProduct } from '@/lib/actions/product.actions';
-import { UploadButton } from '@/lib/uploadthing';
+import { CldUploadWidget } from 'next-cloudinary';
 import { Card, CardContent } from '../ui/card';
 import Image from 'next/image';
 import { Checkbox } from '../ui/checkbox';
 import { z } from 'zod';
+import { ImagePlus } from 'lucide-react';
 
 const ProductForm = ({
   type,
@@ -292,21 +293,29 @@ const ProductForm = ({
                     ))}
                   </div>
                   <FormControl>
-                    <UploadButton
-                      endpoint="imageUploader"
-                      onClientUploadComplete={(res: { url: string }[]) => {
-                        const url = res[0]?.url;
-                        if (!url) return;
-                        form.setValue('images', [...images, url]);
-                        form.setValue('imageColors', [...imageColors, '']);
+                    <CldUploadWidget
+                      uploadPreset="macrame_unsigned"
+                      options={{
+                        multiple: true,
+                        maxFiles: 10,
+                        resourceType: 'image',
+                        folder: 'macrame-products',
                       }}
-                      onUploadError={(error: Error) => {
-                        toast({
-                          variant: 'destructive',
-                          description: `ERROR! ${error.message}`,
-                        });
+                      onSuccess={(result) => {
+                        const info = (result as { info?: { secure_url?: string } })?.info;
+                        if (info?.secure_url) {
+                          form.setValue('images', [...images, info.secure_url]);
+                          form.setValue('imageColors', [...imageColors, '']);
+                        }
                       }}
-                    />
+                    >
+                      {({ open }) => (
+                        <Button type="button" variant="outline" onClick={() => open()}>
+                          <ImagePlus className="mr-2 h-4 w-4" />
+                          Upload Images
+                        </Button>
+                      )}
+                    </CldUploadWidget>
                   </FormControl>
                 </CardContent>
               </Card>
@@ -425,18 +434,28 @@ const ProductForm = ({
                 />
               )}
               {isFeatured && !banner && (
-                <UploadButton
-                  endpoint="imageUploader"
-                  onClientUploadComplete={(res: { url: string }[]) => {
-                    form.setValue('banner', res[0].url);
+                <CldUploadWidget
+                  uploadPreset="macrame_unsigned"
+                  options={{
+                    multiple: false,
+                    maxFiles: 1,
+                    resourceType: 'image',
+                    folder: 'macrame-banners',
                   }}
-                  onUploadError={(error: Error) => {
-                    toast({
-                      variant: 'destructive',
-                      description: `ERROR! ${error.message}`,
-                    });
+                  onSuccess={(result) => {
+                    const info = (result as { info?: { secure_url?: string } })?.info;
+                    if (info?.secure_url) {
+                      form.setValue('banner', info.secure_url);
+                    }
                   }}
-                />
+                >
+                  {({ open }) => (
+                    <Button type="button" variant="outline" onClick={() => open()}>
+                      <ImagePlus className="mr-2 h-4 w-4" />
+                      Upload Banner
+                    </Button>
+                  )}
+                </CldUploadWidget>
               )}
             </CardContent>
           </Card>
