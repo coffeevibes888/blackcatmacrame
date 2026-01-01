@@ -18,6 +18,7 @@ import { ShippingAddress } from '@/types';
 import { z } from 'zod';
 import { PAGE_SIZE } from '../constants';
 import { revalidatePath } from 'next/cache';
+import { sendWelcomeEmail } from '@/email';
 import { Prisma } from '@prisma/client';
 import { getMyCart } from './cart.actions';
 import { sendVerificationEmailToken } from './auth.actions';
@@ -80,6 +81,12 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
     });
 
     await sendVerificationEmailToken(user.email);
+    
+    // Send welcome email
+    await sendWelcomeEmail({
+      email: user.email,
+      name: user.name,
+    });
 
     await signIn('credentials', {
       email: user.email,

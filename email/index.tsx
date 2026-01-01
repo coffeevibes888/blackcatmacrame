@@ -1,61 +1,34 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { render } from '@react-email/components';
-import * as openpgp from 'openpgp';
-import { SENDER_EMAIL, APP_NAME } from '@/lib/constants';
+import { APP_NAME } from '@/lib/constants';
 import { Order } from '@/types';
 
 import PurchaseReceiptEmail from './purchase-receipt';
 import VerifyEmail from './verify-email';
 import ResetPassword from './reset-password';
+import ContactNotification from './contact-notification';
+import WelcomeEmail from './welcome-email';
 
-const smtpHost = process.env.SMTP_HOST;
-const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
-const smtpUser = process.env.SMTP_USER;
-const smtpPass = process.env.SMTP_PASS;
-
-if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-  throw new Error('SMTP configuration is not set in environment variables');
-}
-
-const transporter = nodemailer.createTransport({
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpPort === 465,
-  auth: {
-    user: smtpUser,
-    pass: smtpPass,
-  },
-});
-
-const pgpEnabled = process.env.PGP_ENABLE === 'true';
-const pgpRecipientPublicKey = process.env.PGP_RECIPIENT_PUBLIC_KEY;
-
-async function encryptIfNeeded(content: string) {
-  if (!pgpEnabled || !pgpRecipientPublicKey) {
-    return content;
-  }
-
-  const publicKey = await openpgp.readKey({ armoredKey: pgpRecipientPublicKey });
-  const message = await openpgp.createMessage({ text: content });
-  const encrypted = await openpgp.encrypt({ message, encryptionKeys: publicKey });
-  return encrypted as string;
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 export const sendPurchaseReceipt = async ({ order }: { order: Order }) => {
   try {
     const html = await render(<PurchaseReceiptEmail order={order} />);
-    const body = await encryptIfNeeded(html);
 
-    const info = await transporter.sendMail({
-      from: `${APP_NAME} <${SENDER_EMAIL}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
       to: order.user.email,
-      subject: `Order Confirmation ${order.id}`,
-      text: body,
+      subject: `🛍️ Order Confirmed! #${order.id.slice(-8).toUpperCase()}`,
+      html,
     });
 
-    console.log('✓ Purchase Receipt Email Sent:', info.messageId);
+    if (error) throw error;
+    console.log('✓ Purchase Receipt Email Sent:', data?.id);
+    return { success: true };
   } catch (err) {
     console.error('❌ Error sending Purchase Receipt email:', err);
+    return { success: false, error: err };
   }
 };
 
@@ -68,18 +41,20 @@ export const sendVerificationEmail = async ({
 }) => {
   try {
     const html = await render(<VerifyEmail email={email} verificationLink={verificationLink} />);
-    const body = await encryptIfNeeded(html);
 
-    const info = await transporter.sendMail({
-      from: `${APP_NAME} <${SENDER_EMAIL}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
       to: email,
-      subject: 'Verify your email address',
-      text: body,
+      subject: '✨ Verify your email address',
+      html,
     });
 
-    console.log('✓ Verification Email Sent:', info.messageId);
+    if (error) throw error;
+    console.log('✓ Verification Email Sent:', data?.id);
+    return { success: true };
   } catch (err) {
     console.error('❌ Error sending verification email:', err);
+    return { success: false, error: err };
   }
 };
 
@@ -92,17 +67,87 @@ export const sendPasswordResetEmail = async ({
 }) => {
   try {
     const html = await render(<ResetPassword email={email} resetLink={resetLink} />);
-    const body = await encryptIfNeeded(html);
 
-    const info = await transporter.sendMail({
-      from: `${APP_NAME} <${SENDER_EMAIL}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
       to: email,
-      subject: 'Reset your password',
-      text: body,
+      subject: '🔐 Reset your password',
+      html,
     });
 
-    console.log('✓ Password Reset Email Sent:', info.messageId);
+    if (error) throw error;
+    console.log('✓ Password Reset Email Sent:', data?.id);
+    return { success: true };
   } catch (err) {
     console.error('❌ Error sending password reset email:', err);
+    return { success: false, error: err };
+  }
+};
+
+export const sendWelcomeEmail = async ({
+  email,
+  name,
+}: {
+  email: string;
+  name: string;
+}) => {
+  try {
+    const html = await render(<WelcomeEmail email={email} name={name} />);
+
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
+      to: email,
+      subject: `🎉 Welcome to ${APP_NAME}!`,
+      html,
+    });
+
+    if (error) throw error;
+    console.log('✓ Welcome Email Sent:', data?.id);
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error sending welcome email:', err);
+    return { success: false, error: err };
+  }
+};
+
+export const sendContactNotification = async ({
+  name,
+  email,
+  subject,
+  message,
+  projectType,
+}: {
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  projectType?: string;
+}) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || fromEmail;
+    const html = await render(
+      <ContactNotification
+        name={name}
+        email={email}
+        subject={subject}
+        message={message}
+        projectType={projectType}
+      />
+    );
+
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
+      to: adminEmail,
+      replyTo: email,
+      subject: `📬 New Contact: ${subject || 'Message from ' + name}`,
+      html,
+    });
+
+    if (error) throw error;
+    console.log('✓ Contact Notification Email Sent:', data?.id);
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error sending contact notification:', err);
+    return { success: false, error: err };
   }
 };

@@ -1,6 +1,6 @@
 'use client';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { productDefaultValues } from '@/lib/constants';
 import { insertProductSchema, updateProductSchema } from '@/lib/validators';
 import { Product } from '@/types';
@@ -13,11 +13,11 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { createProduct, updateProduct } from '@/lib/actions/product.actions';
-import { UploadButton } from '@/lib/uploadthing';
 import { Card, CardContent } from '../ui/card';
 import Image from 'next/image';
 import { Checkbox } from '../ui/checkbox';
 import { z } from 'zod';
+import { ImagePlus, FolderUp, Loader2 } from 'lucide-react';
 
 const ProductForm = ({
   type,
@@ -68,6 +68,71 @@ const ProductForm = ({
   const banner = form.watch('banner');
   const [sizes, setSizes] = useState<{ id: string; name: string; slug: string }[]>([]);
   const saleDiscountType = form.watch('saleDiscountType') ?? 'percentage';
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) {
+      toast({ variant: 'destructive', description: 'Cloudinary not configured' });
+      return null;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'macrame_unsigned');
+    formData.append('folder', 'macrame-products');
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.secure_url) return data.secure_url;
+      throw new Error(data.error?.message || 'Upload failed');
+    } catch (err) {
+      console.error('Upload error:', err);
+      return null;
+    }
+  };
+
+  const handleBulkUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    setUploading(true);
+    const newUrls: string[] = [];
+    const newColors: string[] = [];
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      const url = await uploadToCloudinary(file);
+      if (url) {
+        newUrls.push(url);
+        newColors.push('');
+      }
+    }
+
+    if (newUrls.length > 0) {
+      form.setValue('images', [...images, ...newUrls]);
+      form.setValue('imageColors', [...imageColors, ...newColors]);
+      toast({ description: `Uploaded ${newUrls.length} image(s)` });
+    }
+    setUploading(false);
+  };
+
+  const handleBannerUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    const url = await uploadToCloudinary(files[0]);
+    if (url) {
+      form.setValue('banner', url);
+      toast({ description: 'Banner uploaded' });
+    }
+    setUploading(false);
+  };
 
   const handleOnSaleChange = (v: boolean | 'indeterminate') => {
     const checked = Boolean(v);
@@ -292,21 +357,55 @@ const ProductForm = ({
                     ))}
                   </div>
                   <FormControl>
-                    <UploadButton
-                      endpoint="imageUploader"
-                      onClientUploadComplete={(res: { url: string }[]) => {
-                        const url = res[0]?.url;
-                        if (!url) return;
-                        form.setValue('images', [...images, url]);
-                        form.setValue('imageColors', [...imageColors, '']);
-                      }}
-                      onUploadError={(error: Error) => {
-                        toast({
-                          variant: 'destructive',
-                          description: `ERROR! ${error.message}`,
-                        });
-                      }}
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {/* Hidden file inputs */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => handleBulkUpload(e.target.files)}
+                      />
+                      <input
+                        ref={folderInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        // @ts-expect-error webkitdirectory is not in types
+                        webkitdirectory=""
+                        className="hidden"
+                        onChange={(e) => handleBulkUpload(e.target.files)}
+                      />
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {uploading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <ImagePlus className="mr-2 h-4 w-4" />
+                        )}
+                        Upload Images
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploading}
+                        onClick={() => folderInputRef.current?.click()}
+                      >
+                        {uploading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <FolderUp className="mr-2 h-4 w-4" />
+                        )}
+                        Upload Folder
+                      </Button>
+                    </div>
                   </FormControl>
                 </CardContent>
               </Card>
@@ -425,18 +524,28 @@ const ProductForm = ({
                 />
               )}
               {isFeatured && !banner && (
-                <UploadButton
-                  endpoint="imageUploader"
-                  onClientUploadComplete={(res: { url: string }[]) => {
-                    form.setValue('banner', res[0].url);
-                  }}
-                  onUploadError={(error: Error) => {
-                    toast({
-                      variant: 'destructive',
-                      description: `ERROR! ${error.message}`,
-                    });
-                  }}
-                />
+                <>
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleBannerUpload(e.target.files)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploading}
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
+                    {uploading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="mr-2 h-4 w-4" />
+                    )}
+                    Upload Banner
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>

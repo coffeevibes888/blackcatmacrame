@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/db/prisma';
 import { auth } from '@/auth';
+import { sendContactNotification } from '@/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,6 +38,15 @@ export async function POST(req: NextRequest) {
           },
         },
       },
+    });
+
+    // Send email notification
+    await sendContactNotification({
+      name,
+      email,
+      subject,
+      message,
+      projectType,
     });
 
     return NextResponse.json(

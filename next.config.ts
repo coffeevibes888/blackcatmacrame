@@ -2,6 +2,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
+    // Use Cloudinary for image optimization instead of Vercel
+    loader: 'custom',
+    loaderFile: './lib/cloudinary-loader.ts',
     remotePatterns: [
       {
         protocol: 'https',

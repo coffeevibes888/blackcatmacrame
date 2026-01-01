@@ -14,129 +14,143 @@ import {
 } from '@react-email/components';
 import { Order } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import sampleData from '@/db/sample-data';
-require('dotenv').config();
-
-PurchaseReceiptEmail.PreviewProps = {
-  order: {
-    id: crypto.randomUUID(),
-    userId: '123',
-    user: {
-      name: 'John Doe',
-      email: 'test@test.com',
-    },
-    paymentMethod: 'Stripe',
-    shippingAddress: {
-      fullName: 'John Doe',
-      streetAddress: '123 Main st',
-      city: 'New York',
-      postalCode: '10001',
-      country: 'US',
-    },
-    createdAt: new Date(),
-    totalPrice: 100,
-    taxPrice: 10,
-    shippingPrice: 10,
-    itemsPrice: 80,
-    orderitems: sampleData.products.map((x) => ({
-      name: x.name,
-      orderId: '123',
-      productId: '123',
-      slug: x.slug,
-      qty: x.stock,
-      image: x.images[0],
-      price: x.price,
-    })),
-    isDelivered: true,
-    deliveredAt: new Date(),
-    isPaid: true,
-    paidAt: new Date(),
-    paymentResult: {
-      id: '123',
-      status: 'succeeded',
-      pricePaid: '100',
-      email_address: 'test@test.com',
-    },
-  },
-} satisfies OrderInformationProps;
-
-const dateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' });
 
 type OrderInformationProps = {
   order: Order;
 };
 
+const dateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' });
+
 export default function PurchaseReceiptEmail({ order }: OrderInformationProps) {
   return (
     <Html>
-      <Preview>View order receipt</Preview>
+      <Preview>Your order is confirmed! 🎉</Preview>
       <Tailwind>
         <Head />
-        <Body className='font-sans bg-white'>
-          <Container className='max-w-xl'>
-            <Heading>Purchase Receipt</Heading>
-            <Section>
-              <Row>
-                <Column>
-                  <Text className='mb-0 mr-4 text-gray-500 whitespace-nowrap text-nowrap'>
-                    Order ID
-                  </Text>
-                  <Text className='mt-0 mr-4'>{order.id.toString()}</Text>
-                </Column>
-                <Column>
-                  <Text className='mb-0 mr-4 text-gray-500 whitespace-nowrap text-nowrap'>
-                    Purchase Date
-                  </Text>
-                  <Text className='mt-0 mr-4'>
-                    {dateFormatter.format(order.createdAt)}
-                  </Text>
-                </Column>
-                <Column>
-                  <Text className='mb-0 mr-4 text-gray-500 whitespace-nowrap text-nowrap'>
-                    Price Paid
-                  </Text>
-                  <Text className='mt-0 mr-4'>
-                    {formatCurrency(order.totalPrice)}
-                  </Text>
-                </Column>
-              </Row>
+        <Body className='font-sans bg-slate-950 text-slate-50 m-0 py-10'>
+          <Container className='max-w-xl mx-auto px-4'>
+            {/* Header */}
+            <Section className='text-center mb-6'>
+              <Img
+                src='https://blackcatmacrame-delta.vercel.app/images/logo.png'
+                alt='Macrame Black Cat'
+                width='120'
+                className='mx-auto mb-3'
+              />
+              <Text className='text-xs uppercase tracking-[0.25em] text-emerald-400 m-0'>
+                Order Confirmed
+              </Text>
             </Section>
-            <Section className='border border-solid border-gray-500 rounded-lg p-4 md:p-6 my-4'>
-              {order.orderitems.map((item) => (
-                <Row key={item.productId} className='mt-8'>
-                  <Column className='w-20'>
-                    <Img
-                      width='80'
-                      alt={item.name}
-                      className='rounded'
-                      src={
-                        item.image.startsWith('/')
-                          ? `${process.env.NEXT_PUBLIC_SERVER_URL}${item.image}`
-                          : item.image
-                      }
-                    />
+
+            {/* Main Card */}
+            <Section className='bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30 border border-slate-800 rounded-3xl px-8 py-10 shadow-2xl'>
+              <div className='text-center mb-4'>
+                <Text className='text-4xl m-0'>🛍️</Text>
+              </div>
+              
+              <Heading className='text-3xl font-bold mb-2 text-center text-slate-50'>
+                Thank You!
+              </Heading>
+              
+              <Text className='text-sm leading-relaxed text-slate-300 text-center mb-2'>
+                Hey {order.user.name}! 👋
+              </Text>
+              <Text className='text-sm leading-relaxed text-slate-400 text-center mb-8'>
+                Your order has been confirmed and is being prepared with love. Here&apos;s your receipt:
+              </Text>
+
+              {/* Order Info */}
+              <Section className='bg-slate-800/50 rounded-xl p-4 mb-6'>
+                <Row>
+                  <Column>
+                    <Text className='text-[10px] uppercase tracking-wider text-slate-500 m-0 mb-1'>Order ID</Text>
+                    <Text className='text-sm font-mono text-emerald-400 m-0'>#{order.id.slice(-8).toUpperCase()}</Text>
                   </Column>
-                  <Column className='align-top'>
-                    {item.name} x {item.qty}
+                  <Column>
+                    <Text className='text-[10px] uppercase tracking-wider text-slate-500 m-0 mb-1'>Date</Text>
+                    <Text className='text-sm text-slate-300 m-0'>{dateFormatter.format(new Date(order.createdAt))}</Text>
                   </Column>
-                  <Column align='right' className='align-top'>
-                    {formatCurrency(item.price)}
+                  <Column>
+                    <Text className='text-[10px] uppercase tracking-wider text-slate-500 m-0 mb-1'>Total</Text>
+                    <Text className='text-sm font-bold text-emerald-400 m-0'>{formatCurrency(order.totalPrice)}</Text>
                   </Column>
                 </Row>
-              ))}
-              {[
-                { name: 'Items', price: order.itemsPrice },
-                { name: 'Tax', price: order.taxPrice },
-                { name: 'Shipping', price: order.shippingPrice },
-                { name: 'Total', price: order.totalPrice },
-              ].map(({ name, price }) => (
-                <Row key={name} className='py-1'>
-                  <Column align='right'>{name}: </Column>
-                  <Column align='right' width={70} className='align-top'>
-                    <Text className='m-0'>{formatCurrency(price)}</Text>
-                  </Column>
-                </Row>
-              ))}
+              </Section>
+
+              {/* Order Items */}
+              <Section className='border border-slate-700/50 rounded-xl p-4 mb-6'>
+                <Text className='text-xs uppercase tracking-wider text-slate-500 mb-4'>Items Ordered</Text>
+                {order.orderitems.map((item) => (
+                  <Row key={item.productId} className='mb-4'>
+                    <Column className='w-16'>
+                      <Img
+                        width='60'
+                        height='60'
+                        alt={item.name}
+                        className='rounded-lg'
+                        src={
+                          item.image.startsWith('/')
+                            ? `https://blackcatmacrame-delta.vercel.app${item.image}`
+                            : item.image
+                        }
+                      />
+                    </Column>
+                    <Column className='pl-3'>
+                      <Text className='text-sm text-slate-200 m-0 mb-1'>{item.name}</Text>
+                      <Text className='text-xs text-slate-500 m-0'>Qty: {item.qty}</Text>
+                    </Column>
+                    <Column align='right'>
+                      <Text className='text-sm font-semibold text-slate-200 m-0'>
+                        {formatCurrency(Number(item.price) * item.qty)}
+                      </Text>
+                    </Column>
+                  </Row>
+                ))}
+                
+                {/* Totals */}
+                <Section className='border-t border-slate-700/50 pt-4 mt-4'>
+                  <Row className='mb-1'>
+                    <Column><Text className='text-xs text-slate-400 m-0'>Subtotal</Text></Column>
+                    <Column align='right'><Text className='text-xs text-slate-300 m-0'>{formatCurrency(order.itemsPrice)}</Text></Column>
+                  </Row>
+                  <Row className='mb-1'>
+                    <Column><Text className='text-xs text-slate-400 m-0'>Shipping</Text></Column>
+                    <Column align='right'><Text className='text-xs text-slate-300 m-0'>{formatCurrency(order.shippingPrice)}</Text></Column>
+                  </Row>
+                  <Row className='mb-1'>
+                    <Column><Text className='text-xs text-slate-400 m-0'>Tax</Text></Column>
+                    <Column align='right'><Text className='text-xs text-slate-300 m-0'>{formatCurrency(order.taxPrice)}</Text></Column>
+                  </Row>
+                  <Row className='mt-3 pt-3 border-t border-slate-700/50'>
+                    <Column><Text className='text-sm font-bold text-slate-200 m-0'>Total</Text></Column>
+                    <Column align='right'><Text className='text-sm font-bold text-emerald-400 m-0'>{formatCurrency(order.totalPrice)}</Text></Column>
+                  </Row>
+                </Section>
+              </Section>
+
+              {/* Shipping Address */}
+              <Section className='bg-slate-800/30 rounded-xl p-4'>
+                <Text className='text-xs uppercase tracking-wider text-slate-500 mb-2'>Shipping To</Text>
+                <Text className='text-sm text-slate-300 m-0'>
+                  {order.shippingAddress.fullName}<br />
+                  {order.shippingAddress.streetAddress}<br />
+                  {order.shippingAddress.city}, {order.shippingAddress.postalCode}<br />
+                  {order.shippingAddress.country}
+                </Text>
+              </Section>
+            </Section>
+
+            {/* Footer */}
+            <Section className='mt-8 text-center'>
+              <Text className='text-xs text-slate-400 mb-4'>
+                Questions about your order? Just reply to this email!
+              </Text>
+              <Text className='text-[10px] uppercase tracking-[0.2em] text-slate-600 mb-1'>
+                Macrame Black Cat
+              </Text>
+              <Text className='text-[10px] text-slate-700'>
+                Handcrafted with love & intention ✨
+              </Text>
             </Section>
           </Container>
         </Body>
