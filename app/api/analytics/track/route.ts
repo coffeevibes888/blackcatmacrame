@@ -29,18 +29,21 @@ export async function POST(request: NextRequest) {
 
     // Resolve client IP (works behind proxies like Vercel)
     const forwardedFor = request.headers.get('x-forwarded-for');
-    const ip = forwardedFor?.split(',')[0].trim() || '::1';
+    const ip = forwardedFor?.split(',')[0].trim() || request.headers.get('x-real-ip') || '::1';
 
-    // Geo data is available on Vercel/Edge runtime
-    const geo = (request as unknown as { geo?: { country?: string; region?: string; city?: string } }).geo;
+    // Get geo data from Vercel headers (automatically populated by Vercel)
+    const country = request.headers.get('x-vercel-ip-country') || null;
+    const region = request.headers.get('x-vercel-ip-country-region') || null;
+    const cityHeader = request.headers.get('x-vercel-ip-city');
+    const city = cityHeader ? decodeURIComponent(cityHeader) : null;
 
     await trackPageView({
       sessionCartId,
       path: path || '/',
       referrer: referrer || null,
-      country: geo?.country || null,
-      region: geo?.region || null,
-      city: geo?.city || null,
+      country,
+      region,
+      city,
       userAgent: request.headers.get('user-agent') || null,
       ip,
       eventType: eventType || 'pageview',
