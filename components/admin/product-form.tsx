@@ -17,7 +17,8 @@ import { Card, CardContent } from '../ui/card';
 import Image from 'next/image';
 import { Checkbox } from '../ui/checkbox';
 import { z } from 'zod';
-import { ImagePlus, FolderUp, Loader2 } from 'lucide-react';
+import { ImagePlus, FolderUp, Loader2, FolderInput } from 'lucide-react';
+import JSZip from 'jszip';
 
 const ProductForm = ({
   type,
@@ -69,9 +70,11 @@ const ProductForm = ({
   const [sizes, setSizes] = useState<{ id: string; name: string; slug: string }[]>([]);
   const saleDiscountType = form.watch('saleDiscountType') ?? 'percentage';
   const [uploading, setUploading] = useState(false);
+  const [importingFolder, setImportingFolder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const importZipRef = useRef<HTMLInputElement>(null);
 
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -152,6 +155,84 @@ const ProductForm = ({
     }
   };
 
+  // Import from exported ZIP folder
+  const handleImportZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportingFolder(true);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      
+      // Read product.json
+      const productJsonFile = zip.file('product.json');
+      if (!productJsonFile) {
+        toast({ variant: 'destructive', description: 'Invalid export: missing product.json' });
+        return;
+      }
+
+      const productData = JSON.parse(await productJsonFile.async('string'));
+
+      // Upload images from zip to Cloudinary
+      const uploadedImages: string[] = [];
+      const imageFiles = Object.keys(zip.files).filter(f => f.startsWith('images/') && !f.endsWith('/'));
+      
+      for (const imagePath of imageFiles) {
+        const imageFile = zip.file(imagePath);
+        if (!imageFile) continue;
+        
+        const imageData = await imageFile.async('blob');
+        const filename = imagePath.split('/').pop() || 'image.jpg';
+        const imageFileObj = new File([imageData], filename, { type: `image/${filename.split('.').pop()}` });
+        
+        // Skip banner for now, handle separately
+        if (filename.startsWith('banner')) continue;
+        
+        const url = await uploadToCloudinary(imageFileObj);
+        if (url) uploadedImages.push(url);
+      }
+
+      // Upload banner if exists
+      let bannerUrl: string | null = null;
+      const bannerFile = imageFiles.find(f => f.includes('banner'));
+      if (bannerFile) {
+        const bannerData = await zip.file(bannerFile)?.async('blob');
+        if (bannerData) {
+          const filename = bannerFile.split('/').pop() || 'banner.jpg';
+          const bannerFileObj = new File([bannerData], filename, { type: `image/${filename.split('.').pop()}` });
+          bannerUrl = await uploadToCloudinary(bannerFileObj);
+        }
+      }
+
+      // Populate form with imported data
+      form.setValue('name', productData.name || '');
+      form.setValue('slug', productData.slug || '');
+      form.setValue('category', productData.category || '');
+      form.setValue('subCategory', productData.subCategory || '');
+      form.setValue('brand', productData.brand || '');
+      form.setValue('description', productData.description || '');
+      form.setValue('price', productData.price || 0);
+      form.setValue('stock', productData.stock || 0);
+      form.setValue('images', uploadedImages);
+      form.setValue('imageColors', productData.imageColors || []);
+      form.setValue('isFeatured', productData.isFeatured || false);
+      form.setValue('banner', bannerUrl);
+      form.setValue('onSale', productData.onSale || false);
+      if (productData.salePercent) form.setValue('salePercent', productData.salePercent);
+      if (productData.saleDiscountType) form.setValue('saleDiscountType', productData.saleDiscountType);
+      if (productData.saleUntil) form.setValue('saleUntil', productData.saleUntil);
+      if (productData.sizeIds) form.setValue('sizeIds', productData.sizeIds);
+
+      toast({ description: `Imported "${productData.name}" with ${uploadedImages.length} images!` });
+    } catch (err) {
+      console.error('Import error:', err);
+      toast({ variant: 'destructive', description: 'Failed to import product folder' });
+    } finally {
+      setImportingFolder(false);
+      if (importZipRef.current) importZipRef.current.value = '';
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -166,6 +247,40 @@ const ProductForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* -------------------- Import from Exported Folder -------------------- */}
+        {type === 'Create' && (
+          <Card className="border-dashed border-2 border-primary/30 bg-primary/5">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-4">
+                <input
+                  ref={importZipRef}
+                  type="file"
+                  accept=".zip"
+                  onChange={handleImportZip}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={importingFolder}
+                  onClick={() => importZipRef.current?.click()}
+                  className="gap-2"
+                >
+                  {importingFolder ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FolderInput className="h-4 w-4" />
+                  )}
+                  Import from Exported Folder (.zip)
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Upload a previously exported product ZIP to auto-fill this form
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* -------------------- Name & Slug -------------------- */}
         <div className="flex flex-col md:flex-row gap-5">
           <FormField

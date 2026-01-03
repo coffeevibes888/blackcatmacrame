@@ -30,13 +30,13 @@ export default function ProductExportButton({ productId, productSlug }: ProductE
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `product-${productSlug || productId}.csv`;
+      a.download = `${productSlug || productId}.zip`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({ description: 'Product exported!' });
+      toast({ description: 'Product exported as ZIP with images!' });
     } catch {
       toast({ variant: 'destructive', description: 'Export failed' });
     } finally {
@@ -45,7 +45,7 @@ export default function ProductExportButton({ productId, productSlug }: ProductE
   };
 
   return (
-    <Button onClick={handleExport} disabled={exporting} variant="outline" size="sm" title="Export CSV">
+    <Button onClick={handleExport} disabled={exporting} variant="outline" size="sm" title="Export ZIP with images">
       {exporting ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
