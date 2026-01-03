@@ -40,11 +40,11 @@ const normalizeProducts = (products: RawProduct[]): Product[] =>
 
 const Homepage = async () => {
   // Themed sections: make sure your products use these category names
-  const pendantNecklacesRaw = await getLatestProductsByCategory('PENDANT NECKLACES', 20);
-  const jewelrySetsRaw = await getLatestProductsByCategory('JEWELRY SETS', 20);
-  const braceletsRaw = await getLatestProductsByCategory('BRACELETS', 20);
-  const macrameAccessoriesRaw = await getLatestProductsByCategory('MACRAME TRESS AND POUCHES', 20);
-  const chokersRaw = await getLatestProductsByCategory('CHOKERS AND OTHER NECKLACES', 20);
+  const pendantNecklacesRaw = await getLatestProductsByCategory('PENDANT NECKLACES', 24);
+  const jewelrySetsRaw = await getLatestProductsByCategory('JEWELRY SETS', 24);
+  const braceletsRaw = await getLatestProductsByCategory('BRACELETS', 24);
+  const macrameAccessoriesRaw = await getLatestProductsByCategory('MACRAME TRESS AND POUCHES', 24);
+  const chokersRaw = await getLatestProductsByCategory('CHOKERS AND OTHER NECKLACES', 24);
 
   const pendantNecklaces = normalizeProducts(pendantNecklacesRaw);
   const jewelrySets = normalizeProducts(jewelrySetsRaw);

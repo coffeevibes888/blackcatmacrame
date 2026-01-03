@@ -115,6 +115,10 @@ const SearchPage = async (props: {
     return `/search?${new URLSearchParams(params).toString()}`;
   };
 
+  // When a specific category is selected, show all products (no limit)
+  // Otherwise use default pagination
+  const isCategorySelected = category && category !== 'all';
+  
   const products = await getAllProducts({
     query: q,
     category,
@@ -122,6 +126,7 @@ const SearchPage = async (props: {
     rating,
     sort,
     page: Number(page),
+    limit: isCategorySelected ? 1000 : undefined, // Show all products for category pages
     sizeSlug: 'all',
     colorSlug: 'all',
     inStockOnly: false,

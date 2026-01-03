@@ -34,6 +34,7 @@ const views = [
   { id: "device", label: "Device & Technical" },
   { id: "security", label: "Security & Fraud" },
   { id: "marketing", label: "Marketing Attribution" },
+  { id: "data", label: "Data Management" },
 ] as const;
 
 type TopPage = {

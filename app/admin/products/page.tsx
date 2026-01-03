@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getAllProducts, deleteProduct } from '@/lib/actions/product.actions';
 import ProductPromoDialog from '@/components/admin/product-promo-dialog';
+import ProductExportButton from '@/components/admin/product-export-button';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,10 +16,12 @@ import {
 import Pagination from '@/components/shared/pagination';
 import DeleteDialog from '@/components/shared/delete-dialog';
 import { requireAdmin } from '@/lib/auth-guard';
+import { auth } from '@/auth';
 
 interface Product {
   id: string;
   name: string;
+  slug: string;
   price: number | string;
   category: string;
   stock: number;
@@ -33,6 +36,8 @@ const AdminProductsPage = async (props: {
   }>;
 }) => {
   await requireAdmin();
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === 'superAdmin';
 
   const searchParams = await props.searchParams;
 
@@ -109,6 +114,9 @@ const AdminProductsPage = async (props: {
                 <ProductPromoDialog productId={product.id} />
               </TableCell>
               <TableCell className='flex gap-1'>
+                {isSuperAdmin && (
+                  <ProductExportButton productId={product.id} productSlug={product.slug} />
+                )}
                 <Button asChild variant='outline' size='sm'>
                   <Link href={`/admin/products/${product.id}`}>Edit</Link>
                 </Button>
