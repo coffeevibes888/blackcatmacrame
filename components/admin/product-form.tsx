@@ -312,7 +312,7 @@ const ProductForm = ({
                       onClick={() =>
                         form.setValue(
                           'slug',
-                          slugify(form.getValues('name'), { lower: true })
+                          slugify(form.getValues('name'), { lower: true, strict: true })
                         )
                       }
                     >
